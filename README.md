@@ -52,11 +52,11 @@ A lightweight milk-tea tracking iOS app to log drinks in seconds, monitor sugar 
 ### Views Structure
 
 ```
-mikeTeaTrackerApp
+milkTeaTrackerApp
 ├── MainTabView (Tab Bar)
 │   ├── DrinkLogView (Tab 1) ✅
-│   ├── LedgerPlaceholderView (Tab 2) 🚧
-│   └── TrendsPlaceholderView (Tab 3) 🚧
+│   ├── LedgerView (Tab 2) ✅
+│   └── TrendsView (Tab 3) ✅
 │
 └── DrinkLogView Components
     ├── BrandCard (Popular brands grid)
