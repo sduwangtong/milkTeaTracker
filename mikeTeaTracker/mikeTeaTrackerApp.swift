@@ -6,12 +6,17 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct mikeTeaTrackerApp: App {
+    @State private var languageManager = LanguageManager.shared
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
+                .environment(languageManager)
         }
+        .modelContainer(for: [Brand.self, DrinkTemplate.self, DrinkLog.self, CustomDrinkTemplate.self, UserGoals.self])
     }
 }

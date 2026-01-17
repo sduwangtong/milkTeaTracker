@@ -1,0 +1,179 @@
+//
+//  DrinkSelectionView.swift
+//  mikeTeaTracker
+//
+//  Created by Tong Wang on 1/12/26.
+//
+
+import SwiftUI
+import SwiftData
+
+struct DrinkSelectionView: View {
+    let brandId: UUID
+    let toastManager: ToastManager
+    
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @Environment(LanguageManager.self) private var languageManager
+    
+    @Query(sort: \Brand.name) private var allBrands: [Brand]
+    @Query(sort: \DrinkTemplate.name) private var allDrinkTemplates: [DrinkTemplate]
+    @State private var searchText = ""
+    @State private var selectedDrink: DrinkTemplate?
+    @State private var showingOptions = false
+    @State private var brand: Brand? = nil  // Changed to @State
+    
+    // Filter drinks for this brand manually
+    private var drinkTemplates: [DrinkTemplate] {
+        allDrinkTemplates.filter { drink in
+            drink.brand?.id == brandId
+        }
+    }
+    
+    private var filteredDrinks: [DrinkTemplate] {
+        if searchText.isEmpty {
+            return drinkTemplates
+        }
+        return drinkTemplates.filter { drink in
+            drink.name.localizedCaseInsensitiveContains(searchText) ||
+            drink.nameZH.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            if let brand = brand {
+                VStack(spacing: 0) {
+                    // Search Bar
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(.secondary)
+                        
+                        TextField(String(localized: "search_placeholder"), text: $searchText)
+                            .textFieldStyle(.plain)
+                    }
+                    .padding(12)
+                    .background(Color(red: 0.95, green: 0.95, blue: 0.97))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .padding()
+                    
+                    // Drinks List
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(filteredDrinks, id: \.id) { drink in
+                                DrinkTemplateRow(drink: drink, brandEmoji: brand.emoji) {
+                                    selectedDrink = drink
+                                    showingOptions = true
+                                }
+                                .padding(.horizontal)
+                                .padding(.vertical, 12)
+                                
+                                if drink.id != filteredDrinks.last?.id {
+                                    Divider()
+                                        .padding(.leading, 80)
+                                }
+                            }
+                        }
+                    }
+                }
+                .navigationTitle("\(brand.emoji) \(languageManager.isEnglish ? brand.name : brand.nameZH)")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Done") {
+                            dismiss()
+                        }
+                    }
+                }
+                .sheet(isPresented: $showingOptions) {
+                    if let drink = selectedDrink {
+                        DrinkOptionsSheet(
+                            brandId: brand.id,
+                            drinkTemplateId: drink.id,
+                            toastManager: toastManager,
+                            onSave: {
+                                showingOptions = false
+                                dismiss()
+                            }
+                        )
+                    }
+                }
+            } else {
+                ProgressView()
+                    .navigationTitle("")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") {
+                                dismiss()
+                            }
+                        }
+                    }
+            }
+        }
+        .onAppear {
+            // Fetch brand from ModelContext when view appears
+            if brand == nil {
+                brand = allBrands.first { $0.id == brandId }
+            }
+        }
+        .onChange(of: allBrands) { oldValue, newValue in
+            // Re-fetch brand if allBrands updates and brand is still nil
+            if brand == nil {
+                brand = newValue.first { $0.id == brandId }
+            }
+        }
+    }
+}
+
+struct DrinkTemplateRow: View {
+    let drink: DrinkTemplate
+    let brandEmoji: String
+    let onTap: () -> Void
+    @Environment(LanguageManager.self) private var languageManager
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                // Emoji
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(red: 0.93, green: 0.26, blue: 0.55).opacity(0.1))
+                        .frame(width: 56, height: 56)
+                    
+                    Text(brandEmoji)
+                        .font(.system(size: 28))
+                }
+                
+                // Drink info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(languageManager.isEnglish ? drink.name : drink.nameZH)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    
+                    Text("\(String(localized: "calories_label")): ~\(Int(drink.baseCalories))\(String(localized: "kcal_unit"))")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+#Preview {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Brand.self, DrinkTemplate.self, DrinkLog.self, configurations: config)
+    let brand = Brand(name: "HeyTea", nameZH: "喜茶", emoji: "🍵", isPopular: true)
+    container.mainContext.insert(brand)
+    
+    return DrinkSelectionView(brandId: brand.id, toastManager: ToastManager())
+        .modelContainer(container)
+        .environment(LanguageManager.shared)
+}
