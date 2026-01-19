@@ -16,8 +16,12 @@ struct CustomDrinkEntrySheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(LanguageManager.self) private var languageManager
     
+    @Query(sort: \Brand.name) private var allBrands: [Brand]
+    
     @State private var drinkName: String = "Milk Tea"
-    @State private var brandName: String = ""
+    @State private var selectedBrand: Brand?
+    @State private var customBrandName: String = ""
+    @State private var useCustomBrand: Bool = false
     @State private var selectedSize: DrinkSize = .medium
     @State private var selectedSugarLevel: SugarLevel = .regular
     @State private var selectedIce: IceLevel = .regular
@@ -54,13 +58,46 @@ struct CustomDrinkEntrySheet: View {
                         }
                 }
                 
-                // Brand Name Input (Optional)
+                // Brand Selector
                 VStack(alignment: .leading, spacing: 8) {
                     Text(String(localized: "brand_name_optional"))
                         .font(.system(size: 16, weight: .semibold))
                     
-                    TextField(String(localized: "enter_brand_name"), text: $brandName)
-                        .textFieldStyle(.roundedBorder)
+                    if useCustomBrand {
+                        // Custom brand text field
+                        HStack {
+                            TextField(String(localized: "enter_brand_name"), text: $customBrandName)
+                                .textFieldStyle(.roundedBorder)
+                            
+                            Button {
+                                useCustomBrand = false
+                                customBrandName = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    } else {
+                        // Brand picker
+                        HStack {
+                            Picker("Brand", selection: $selectedBrand) {
+                                Text(String(localized: "select_brand")).tag(nil as Brand?)
+                                ForEach(allBrands, id: \.id) { brand in
+                                    Text(languageManager.isEnglish ? brand.name : brand.nameZH).tag(brand as Brand?)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            
+                            Spacer()
+                            
+                            Button(String(localized: "other")) {
+                                useCustomBrand = true
+                                selectedBrand = nil
+                            }
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color(red: 0.93, green: 0.26, blue: 0.55))
+                        }
+                    }
                 }
                 
                 // Estimation Display and Override
@@ -236,16 +273,38 @@ struct CustomDrinkEntrySheet: View {
         )
         modelContext.insert(customTemplate)
         
-        // Use custom brand name if provided, otherwise use "Quick Log"
-        let finalBrandName = brandName.isEmpty ? "Quick Log" : brandName
-        let finalBrandNameZH = brandName.isEmpty ? "快速记录" : brandName
+        // Determine brand info based on selection
+        let finalBrandId: UUID
+        let finalBrandName: String
+        let finalBrandNameZH: String
+        let finalBrandEmoji: String
+        
+        if useCustomBrand && !customBrandName.isEmpty {
+            // Using custom brand name
+            finalBrandId = UUID()
+            finalBrandName = customBrandName
+            finalBrandNameZH = customBrandName
+            finalBrandEmoji = "⚡"
+        } else if let brand = selectedBrand {
+            // Using selected brand from picker
+            finalBrandId = brand.id
+            finalBrandName = brand.name
+            finalBrandNameZH = brand.nameZH
+            finalBrandEmoji = brand.emoji
+        } else {
+            // No brand selected - use Quick Log
+            finalBrandId = UUID()
+            finalBrandName = "Quick Log"
+            finalBrandNameZH = "快速记录"
+            finalBrandEmoji = "⚡"
+        }
         
         // Create drink log entry
         let drinkLog = DrinkLog(
-            brandId: UUID(),
+            brandId: finalBrandId,
             brandName: finalBrandName,
             brandNameZH: finalBrandNameZH,
-            brandEmoji: "⚡",
+            brandEmoji: finalBrandEmoji,
             drinkName: drinkName,
             drinkNameZH: drinkName,
             size: selectedSize,

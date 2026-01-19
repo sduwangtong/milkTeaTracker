@@ -26,11 +26,13 @@ struct MainTabView: View {
                 }
                 .tag(1)
             
-            TrendsView()
-                .tabItem {
-                    Label(String(localized: "trends"), systemImage: "chart.line.uptrend.xyaxis")
-                }
-                .tag(2)
+            if FeatureFlags.showTrends {
+                TrendsView()
+                    .tabItem {
+                        Label(String(localized: "trends"), systemImage: "chart.line.uptrend.xyaxis")
+                    }
+                    .tag(2)
+            }
         }
         .tint(Color(red: 0.93, green: 0.26, blue: 0.55)) // Pink accent color
         .onAppear {

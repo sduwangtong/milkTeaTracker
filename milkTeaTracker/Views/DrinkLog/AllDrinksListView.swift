@@ -16,7 +16,6 @@ struct AllDrinksListView: View {
     
     @Query(sort: \DrinkLog.timestamp, order: .reverse) private var allDrinkLogs: [DrinkLog]
     
-    @State private var showingEditDrink = false
     @State private var selectedDrinkLog: DrinkLog?
     
     // Group logs by date
@@ -66,7 +65,6 @@ struct AllDrinksListView: View {
                                         
                                         Button {
                                             selectedDrinkLog = log
-                                            showingEditDrink = true
                                         } label: {
                                             Label("Edit", systemImage: "pencil")
                                         }
@@ -93,13 +91,10 @@ struct AllDrinksListView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingEditDrink) {
-                if let log = selectedDrinkLog {
-                    EditDrinkLogSheet(drinkLogId: log.id, toastManager: toastManager, onSave: {
-                        showingEditDrink = false
-                        selectedDrinkLog = nil
-                    })
-                }
+            .sheet(item: $selectedDrinkLog) { log in
+                EditDrinkLogSheet(drinkLog: log, toastManager: toastManager, onSave: {
+                    selectedDrinkLog = nil
+                })
             }
         }
         .toast(toastManager)

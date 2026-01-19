@@ -18,6 +18,16 @@ extension Date {
         return calendar.isDate(self, equalTo: Date(), toGranularity: .weekOfYear)
     }
     
+    func isInSameWeek(as otherDate: Date) -> Bool {
+        let calendar = Calendar.current
+        return calendar.isDate(self, equalTo: otherDate, toGranularity: .weekOfYear)
+    }
+    
+    func isInSameMonth(as otherDate: Date) -> Bool {
+        let calendar = Calendar.current
+        return calendar.isDate(self, equalTo: otherDate, toGranularity: .month)
+    }
+    
     func startOfDay() -> Date {
         Calendar.current.startOfDay(for: self)
     }
@@ -32,6 +42,32 @@ extension Date {
         let calendar = Calendar.current
         return calendar.date(byAdding: .day, value: 6, to: startOfWeek()) ?? self
     }
+    
+    func startOfMonth() -> Date {
+        let calendar = Calendar.current
+        return calendar.date(from: calendar.dateComponents([.year, .month], from: self))!
+    }
+    
+    func endOfMonth() -> Date {
+        let calendar = Calendar.current
+        return calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth())!
+    }
+    
+    func previousWeek() -> Date {
+        Calendar.current.date(byAdding: .weekOfYear, value: -1, to: self)!
+    }
+    
+    func nextWeek() -> Date {
+        Calendar.current.date(byAdding: .weekOfYear, value: 1, to: self)!
+    }
+    
+    func previousMonth() -> Date {
+        Calendar.current.date(byAdding: .month, value: -1, to: self)!
+    }
+    
+    func nextMonth() -> Date {
+        Calendar.current.date(byAdding: .month, value: 1, to: self)!
+    }
 }
 
 extension Array where Element == DrinkLog {
@@ -41,6 +77,64 @@ extension Array where Element == DrinkLog {
     
     func currentWeek() -> [DrinkLog] {
         filter { $0.timestamp.isInCurrentWeek() }
+    }
+    
+    /// Filter logs for a specific week containing the reference date
+    func forWeek(containing referenceDate: Date) -> [DrinkLog] {
+        filter { $0.timestamp.isInSameWeek(as: referenceDate) }
+    }
+    
+    /// Filter logs for a specific month containing the reference date
+    func forMonth(containing referenceDate: Date) -> [DrinkLog] {
+        filter { $0.timestamp.isInSameMonth(as: referenceDate) }
+    }
+    
+    /// Calculates the longest streak of consecutive days without any drinks in the given period
+    func longestTeaFreeStreak(for period: TimePeriod, referenceDate: Date = Date()) -> Int {
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // Determine the date range based on period
+        let startDate: Date
+        let endDate: Date
+        
+        switch period {
+        case .weekly:
+            startDate = referenceDate.startOfWeek()
+            // End date is either today or end of week, whichever is earlier
+            let weekEnd = referenceDate.endOfWeek()
+            endDate = Swift.min(today, weekEnd)
+        case .monthly:
+            startDate = referenceDate.startOfMonth()
+            let monthEnd = referenceDate.endOfMonth()
+            endDate = Swift.min(today, monthEnd)
+        }
+        
+        // Get all dates with drinks
+        let datesWithDrinks = Set(self.map { calendar.startOfDay(for: $0.timestamp) })
+        
+        // Calculate streak
+        var longestStreak = 0
+        var currentStreak = 0
+        var currentDate = startDate
+        
+        while currentDate <= endDate {
+            let dayStart = calendar.startOfDay(for: currentDate)
+            
+            if datesWithDrinks.contains(dayStart) {
+                // Had a drink this day, reset streak
+                currentStreak = 0
+            } else {
+                // No drink this day, increment streak
+                currentStreak += 1
+                longestStreak = Swift.max(longestStreak, currentStreak)
+            }
+            
+            // Move to next day
+            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
+        }
+        
+        return longestStreak
     }
     
     func groupedByDate() -> [(Date, [DrinkLog])] {

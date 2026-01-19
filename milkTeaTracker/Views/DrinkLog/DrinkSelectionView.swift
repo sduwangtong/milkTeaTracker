@@ -9,24 +9,21 @@ import SwiftUI
 import SwiftData
 
 struct DrinkSelectionView: View {
-    let brandId: UUID
+    let brand: Brand
     let toastManager: ToastManager
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(LanguageManager.self) private var languageManager
     
-    @Query(sort: \Brand.name) private var allBrands: [Brand]
     @Query(sort: \DrinkTemplate.name) private var allDrinkTemplates: [DrinkTemplate]
     @State private var searchText = ""
     @State private var selectedDrink: DrinkTemplate?
-    @State private var showingOptions = false
-    @State private var brand: Brand? = nil  // Changed to @State
     
     // Filter drinks for this brand manually
     private var drinkTemplates: [DrinkTemplate] {
         allDrinkTemplates.filter { drink in
-            drink.brand?.id == brandId
+            drink.brand?.id == brand.id
         }
     }
     
@@ -42,85 +39,57 @@ struct DrinkSelectionView: View {
     
     var body: some View {
         NavigationStack {
-            if let brand = brand {
-                VStack(spacing: 0) {
-                    // Search Bar
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(.secondary)
-                        
-                        TextField(String(localized: "search_placeholder"), text: $searchText)
-                            .textFieldStyle(.plain)
-                    }
-                    .padding(12)
-                    .background(Color(red: 0.95, green: 0.95, blue: 0.97))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .padding()
+            VStack(spacing: 0) {
+                // Search Bar
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
                     
-                    // Drinks List
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            ForEach(filteredDrinks, id: \.id) { drink in
-                                DrinkTemplateRow(drink: drink, brandEmoji: brand.emoji) {
-                                    selectedDrink = drink
-                                    showingOptions = true
-                                }
-                                .padding(.horizontal)
-                                .padding(.vertical, 12)
-                                
-                                if drink.id != filteredDrinks.last?.id {
-                                    Divider()
-                                        .padding(.leading, 80)
-                                }
+                    TextField(String(localized: "search_placeholder"), text: $searchText)
+                        .textFieldStyle(.plain)
+                }
+                .padding(12)
+                .background(Color(red: 0.95, green: 0.95, blue: 0.97))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .padding()
+                
+                // Drinks List
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(filteredDrinks, id: \.id) { drink in
+                            DrinkTemplateRow(drink: drink, brandEmoji: brand.emoji) {
+                                selectedDrink = drink
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 12)
+                            
+                            if drink.id != filteredDrinks.last?.id {
+                                Divider()
+                                    .padding(.leading, 80)
                             }
                         }
                     }
                 }
-                .navigationTitle("\(brand.emoji) \(languageManager.isEnglish ? brand.name : brand.nameZH)")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Done") {
-                            dismiss()
-                        }
-                    }
-                }
-                .sheet(isPresented: $showingOptions) {
-                    if let drink = selectedDrink {
-                        DrinkOptionsSheet(
-                            brandId: brand.id,
-                            drinkTemplateId: drink.id,
-                            toastManager: toastManager,
-                            onSave: {
-                                showingOptions = false
-                                dismiss()
-                            }
-                        )
-                    }
-                }
-            } else {
-                ProgressView()
-                    .navigationTitle("")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("Done") {
-                                dismiss()
-                            }
-                        }
-                    }
             }
-        }
-        .onAppear {
-            // Fetch brand from ModelContext when view appears
-            if brand == nil {
-                brand = allBrands.first { $0.id == brandId }
+            .navigationTitle("\(brand.emoji) \(languageManager.isEnglish ? brand.name : brand.nameZH)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
             }
-        }
-        .onChange(of: allBrands) { oldValue, newValue in
-            // Re-fetch brand if allBrands updates and brand is still nil
-            if brand == nil {
-                brand = newValue.first { $0.id == brandId }
+            .sheet(item: $selectedDrink) { drink in
+                DrinkOptionsSheet(
+                    brandId: brand.id,
+                    drinkTemplateId: drink.id,
+                    toastManager: toastManager,
+                    onSave: {
+                        selectedDrink = nil
+                        dismiss()
+                    }
+                )
             }
         }
     }
@@ -173,7 +142,7 @@ struct DrinkTemplateRow: View {
     let brand = Brand(name: "HeyTea", nameZH: "喜茶", emoji: "🍵", isPopular: true)
     container.mainContext.insert(brand)
     
-    return DrinkSelectionView(brandId: brand.id, toastManager: ToastManager())
+    return DrinkSelectionView(brand: brand, toastManager: ToastManager())
         .modelContainer(container)
         .environment(LanguageManager.shared)
 }

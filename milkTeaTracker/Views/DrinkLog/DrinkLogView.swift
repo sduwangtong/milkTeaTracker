@@ -17,10 +17,8 @@ struct DrinkLogView: View {
     @Query(sort: \DrinkLog.timestamp, order: .reverse) private var allDrinkLogs: [DrinkLog]
     
     @State private var searchText = ""
-    @State private var selectedBrandId: UUID?
-    @State private var showingDrinkSelection = false
+    @State private var selectedBrand: Brand?
     @State private var showingCustomDrinkEntry = false
-    @State private var showingEditDrink = false
     @State private var selectedDrinkLog: DrinkLog?
     @State private var showingAllDrinks = false
     
@@ -43,18 +41,20 @@ struct DrinkLogView: View {
                         .padding(.horizontal)
                         .padding(.top, 8)
                     
-                    // Search Bar
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(.secondary)
-                        
-                        TextField(String(localized: "search_placeholder"), text: $searchText)
-                            .textFieldStyle(.plain)
+                    // Search Bar (hidden with popular brands)
+                    if FeatureFlags.showPopularBrands {
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundStyle(.secondary)
+                            
+                            TextField(String(localized: "search_placeholder"), text: $searchText)
+                                .textFieldStyle(.plain)
+                        }
+                        .padding(12)
+                        .background(Color(red: 0.95, green: 0.95, blue: 0.97))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .padding(.horizontal)
                     }
-                    .padding(12)
-                    .background(Color(red: 0.95, green: 0.95, blue: 0.97))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .padding(.horizontal)
                     
                     // Quick Log Button (moved to top)
                     Button(action: {
@@ -75,24 +75,25 @@ struct DrinkLogView: View {
                     .padding(.horizontal)
                     
                     // Popular Brands Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(String(localized: "popular_brands"))
-                            .font(.system(size: 17, weight: .semibold))
-                            .padding(.horizontal)
-                        
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 12) {
-                            ForEach(popularBrands, id: \.id) { brand in
-                                BrandCard(brand: brand) {
-                                    selectedBrandId = brand.id
-                                    showingDrinkSelection = true
+                    if FeatureFlags.showPopularBrands {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(String(localized: "popular_brands"))
+                                .font(.system(size: 17, weight: .semibold))
+                                .padding(.horizontal)
+                            
+                            LazyVGrid(columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ], spacing: 12) {
+                                ForEach(popularBrands, id: \.id) { brand in
+                                    BrandCard(brand: brand) {
+                                        selectedBrand = brand
+                                    }
                                 }
                             }
+                            .padding(.horizontal)
                         }
-                        .padding(.horizontal)
                     }
                     
                     // Recent Drinks Section
@@ -112,12 +113,13 @@ struct DrinkLogView: View {
                             }
                             .padding(.horizontal)
                             
-                            VStack(spacing: 0) {
+                            List {
                                 ForEach(recentDrinks, id: \.id) { log in
                                     RecentDrinkRow(drinkLog: log) {
                                         quickReLog(log)
                                     }
-                                    .padding(.horizontal)
+                                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                                    .listRowSeparator(.hidden)
                                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                         Button(role: .destructive) {
                                             deleteDrinkLog(log)
@@ -127,19 +129,15 @@ struct DrinkLogView: View {
                                         
                                         Button {
                                             selectedDrinkLog = log
-                                            showingEditDrink = true
                                         } label: {
                                             Label("Edit", systemImage: "pencil")
                                         }
                                         .tint(.blue)
                                     }
-                                    
-                                    if log.id != recentDrinks.last?.id {
-                                        Divider()
-                                            .padding(.leading, 80)
-                                    }
                                 }
                             }
+                            .listStyle(.plain)
+                            .frame(height: CGFloat(recentDrinks.count) * 72)
                         }
                     }
                 }
@@ -159,21 +157,16 @@ struct DrinkLogView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingDrinkSelection) {
-                if let brandId = selectedBrandId {
-                    DrinkSelectionView(brandId: brandId, toastManager: toastManager)
-                }
+            .sheet(item: $selectedBrand) { brand in
+                DrinkSelectionView(brand: brand, toastManager: toastManager)
             }
             .sheet(isPresented: $showingCustomDrinkEntry) {
                 CustomDrinkEntrySheet(toastManager: toastManager, onSave: {})
             }
-            .sheet(isPresented: $showingEditDrink) {
-                if let log = selectedDrinkLog {
-                    EditDrinkLogSheet(drinkLogId: log.id, toastManager: toastManager, onSave: {
-                        showingEditDrink = false
-                        selectedDrinkLog = nil
-                    })
-                }
+            .sheet(item: $selectedDrinkLog) { log in
+                EditDrinkLogSheet(drinkLog: log, toastManager: toastManager, onSave: {
+                    selectedDrinkLog = nil
+                })
             }
             .sheet(isPresented: $showingAllDrinks) {
                 AllDrinksListView()
