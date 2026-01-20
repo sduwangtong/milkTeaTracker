@@ -20,6 +20,7 @@ final class DrinkLog {
     var size: DrinkSize
     var sugarLevel: SugarLevel
     var iceLevel: IceLevel
+    var bubbleLevel: BubbleLevel = BubbleLevel.none
     var calories: Double
     var sugarGrams: Double
     var price: Double?
@@ -36,6 +37,7 @@ final class DrinkLog {
          size: DrinkSize,
          sugarLevel: SugarLevel,
          iceLevel: IceLevel,
+         bubbleLevel: BubbleLevel = .none,
          calories: Double,
          sugarGrams: Double,
          price: Double? = nil,
@@ -51,6 +53,7 @@ final class DrinkLog {
         self.size = size
         self.sugarLevel = sugarLevel
         self.iceLevel = iceLevel
+        self.bubbleLevel = bubbleLevel
         self.calories = calories
         self.sugarGrams = sugarGrams
         self.price = price
@@ -59,8 +62,10 @@ final class DrinkLog {
     }
     
     // Helper to calculate calories and sugar from a template
-    static func calculate(baseCalories: Double, baseSugar: Double, size: DrinkSize, sugarLevel: SugarLevel) -> (calories: Double, sugar: Double) {
-        let calories = baseCalories * size.multiplier * sugarLevel.multiplier
+    // New formula: (baseCalories * sizeMultiplier * sugarMultiplier) + bubbleCalories
+    static func calculate(baseCalories: Double, baseSugar: Double, size: DrinkSize, sugarLevel: SugarLevel, bubbleLevel: BubbleLevel = .none) -> (calories: Double, sugar: Double) {
+        let baseCalc = baseCalories * size.multiplier * sugarLevel.multiplier
+        let calories = baseCalc + bubbleLevel.calorieAddition
         let sugar = baseSugar * size.multiplier * sugarLevel.multiplier
         return (calories, sugar)
     }

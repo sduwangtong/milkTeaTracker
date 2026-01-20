@@ -72,3 +72,27 @@ enum IceLevel: String, Codable, CaseIterable {
         }
     }
 }
+
+enum BubbleLevel: String, Codable, CaseIterable {
+    case none
+    case regular
+    case extra
+    
+    /// Additional calories from bubble/boba topping
+    /// Based on research: standard boba serving ~100-150 kcal
+    var calorieAddition: Double {
+        switch self {
+        case .none: return 0       // No boba
+        case .regular: return 100  // Standard serving ~100 kcal
+        case .extra: return 150    // Extra serving ~150 kcal
+        }
+    }
+    
+    var localizedName: String {
+        switch self {
+        case .none: return String(localized: "bubble_none")
+        case .regular: return String(localized: "bubble_regular")
+        case .extra: return String(localized: "bubble_extra")
+        }
+    }
+}

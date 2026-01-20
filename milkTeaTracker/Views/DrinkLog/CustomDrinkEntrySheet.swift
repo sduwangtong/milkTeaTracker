@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import VisionKit
 
 struct CustomDrinkEntrySheet: View {
     let toastManager: ToastManager
@@ -25,10 +26,20 @@ struct CustomDrinkEntrySheet: View {
     @State private var selectedSize: DrinkSize = .medium
     @State private var selectedSugarLevel: SugarLevel = .regular
     @State private var selectedIce: IceLevel = .regular
+    @State private var selectedBubble: BubbleLevel = .none
     @State private var baseEstimatedCalories: Double = 300
     @State private var calorieOverride: String = ""
     @State private var showOverride: Bool = false
     @State private var priceText: String = ""
+    
+    // Receipt scanner state
+    @State private var showReceiptSourceSheet: Bool = false
+    @State private var showReceiptScanner: Bool = false
+    @State private var showPhotoPicker: Bool = false
+    @State private var showFilePicker: Bool = false
+    @State private var parsedReceipt: ParsedReceipt?
+    @State private var isProcessingReceipt: Bool = false
+    @State private var showDrinkSelectionSheet: Bool = false
     
     @FocusState private var focusedField: Field?
     
@@ -38,13 +49,38 @@ struct CustomDrinkEntrySheet: View {
     }
     
     // Computed property that applies multipliers to base estimate
+    // Formula: (baseCalories * sizeMultiplier * sugarMultiplier) + bubbleCalories
+    // Minimum floor of 150 kcal to avoid showing 0 for any drink
     private var displayedCalories: Double {
-        baseEstimatedCalories * selectedSize.multiplier * selectedSugarLevel.multiplier
+        let baseCalc = baseEstimatedCalories * selectedSize.multiplier * selectedSugarLevel.multiplier
+        let calculated = baseCalc + selectedBubble.calorieAddition
+        return max(calculated, 150)
     }
     
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
+                // Scan Receipt Button - shows action sheet with multiple source options
+                Button(action: { showReceiptSourceSheet = true }) {
+                    HStack {
+                        if isProcessingReceipt {
+                            ProgressView()
+                                .tint(.white)
+                                .padding(.trailing, 4)
+                        } else {
+                            Image(systemName: "sparkles")
+                        }
+                        Text(String(localized: "scan_receipt"))
+                    }
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color(red: 0.2, green: 0.6, blue: 0.86))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+                .disabled(isProcessingReceipt)
+                
                 // Drink Name Input
                 VStack(alignment: .leading, spacing: 8) {
                     Text(String(localized: "drink_name"))
@@ -190,6 +226,19 @@ struct CustomDrinkEntrySheet: View {
                     }
                 }
                 
+                // Bubble Level Picker
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(String(localized: "bubble_label"))
+                        .font(.system(size: 14, weight: .semibold))
+                    
+                    Picker("", selection: $selectedBubble) {
+                        ForEach(BubbleLevel.allCases, id: \.self) { bubble in
+                            Text(bubble.localizedName).tag(bubble)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
                 // Price Input
                 VStack(alignment: .leading, spacing: 8) {
                     Text(String(localized: "price_label"))
@@ -240,8 +289,166 @@ struct CustomDrinkEntrySheet: View {
                 let estimated = NutritionEstimator.estimate(from: drinkName)
                 baseEstimatedCalories = estimated.calories
             }
+            .overlay {
+                // Full-screen progress overlay while processing receipt
+                if isProcessingReceipt {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+                        
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .scaleEffect(1.5)
+                                .tint(.white)
+                            
+                            Text(String(localized: "receipt_using_ai"))
+                                .foregroundStyle(.white)
+                                .font(.headline)
+                        }
+                        .padding(32)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                }
+            }
         }
         .presentationDetents([.large])
+        .confirmationDialog(
+            String(localized: "receipt_source_title"),
+            isPresented: $showReceiptSourceSheet,
+            titleVisibility: .visible
+        ) {
+            // Camera option - only show if supported
+            if isCameraScanningSupported() {
+                Button(String(localized: "receipt_source_camera")) {
+                    showReceiptScanner = true
+                }
+            }
+            
+            // Photo library option
+            Button(String(localized: "receipt_source_photos")) {
+                showPhotoPicker = true
+            }
+            
+            // Files option
+            Button(String(localized: "receipt_source_files")) {
+                showFilePicker = true
+            }
+            
+            Button("Cancel", role: .cancel) { }
+        }
+        .sheet(isPresented: $showReceiptScanner) {
+            ReceiptScannerView(parsedReceipt: $parsedReceipt, isProcessing: $isProcessingReceipt)
+        }
+        .sheet(isPresented: $showPhotoPicker) {
+            ReceiptPhotoPickerView(parsedReceipt: $parsedReceipt, isProcessing: $isProcessingReceipt)
+        }
+        .sheet(isPresented: $showFilePicker) {
+            ReceiptFilePickerView(parsedReceipt: $parsedReceipt, isProcessing: $isProcessingReceipt)
+        }
+        .sheet(isPresented: $showDrinkSelectionSheet) {
+            if let receipt = parsedReceipt {
+                DrinkSelectionFromReceiptSheet(
+                    items: receipt.items,
+                    brandName: receipt.brandName,
+                    onSelect: { selectedItem in
+                        applySelectedDrinkItem(selectedItem, from: receipt)
+                    }
+                )
+            }
+        }
+        .onChange(of: parsedReceipt) { oldValue, newValue in
+            handleParsedReceipt(newValue)
+        }
+    }
+    
+    /// Handle parsed receipt - show selection if multiple drinks, otherwise apply directly
+    private func handleParsedReceipt(_ receipt: ParsedReceipt?) {
+        guard let receipt = receipt else { return }
+        
+        // Check if receipt has any data
+        guard receipt.hasAnyData else {
+            toastManager.show(String(localized: "receipt_scan_no_data"))
+            return
+        }
+        
+        // If multiple drinks found, show selection sheet
+        if receipt.items.count > 1 {
+            showDrinkSelectionSheet = true
+            return
+        }
+        
+        // Single drink or no drinks - apply directly
+        if let firstItem = receipt.firstItem {
+            applySelectedDrinkItem(firstItem, from: receipt)
+        } else {
+            // No drinks found, but maybe we have brand or total price
+            applyBrandFromReceipt(receipt)
+            if let total = receipt.totalPrice {
+                priceText = String(format: "%.2f", total)
+            }
+            toastManager.show(String(localized: "receipt_scanned_success"))
+        }
+    }
+    
+    /// Apply a selected drink item to the form
+    private func applySelectedDrinkItem(_ item: ParsedReceiptItem, from receipt: ParsedReceipt) {
+        // Apply brand first
+        applyBrandFromReceipt(receipt)
+        
+        // Apply drink name
+        drinkName = item.drinkName
+        
+        // Update calorie estimate based on drink name
+        let estimated = NutritionEstimator.estimate(from: item.drinkName)
+        baseEstimatedCalories = estimated.calories
+        
+        // Apply size - default to medium if not found
+        selectedSize = item.size ?? .medium
+        
+        // Apply sugar level - default to half sugar (.less = 50%) if not found
+        selectedSugarLevel = item.sugarLevel ?? .less
+        
+        // Apply ice level - default to less ice (.less) if not found
+        selectedIce = item.iceLevel ?? .less
+        
+        // Apply bubble level - default to none if not found
+        selectedBubble = item.bubbleLevel ?? .none
+        
+        // Apply price - use item price or fall back to total
+        if let price = item.price {
+            priceText = String(format: "%.2f", price)
+        } else if let totalPrice = receipt.totalPrice {
+            priceText = String(format: "%.2f", totalPrice)
+        }
+        
+        toastManager.show(String(localized: "receipt_scanned_success"))
+    }
+    
+    /// Apply brand from parsed receipt using fuzzy matching
+    private func applyBrandFromReceipt(_ receipt: ParsedReceipt) {
+        guard let brandName = receipt.brandName else { return }
+        
+        // Try to find matching brand in database
+        let matchedBrand = allBrands.first { brand in
+            let brandLower = brand.name.lowercased()
+            let parsedLower = brandName.lowercased()
+            
+            // Check if brand name contains the parsed name or vice versa
+            return brandLower.contains(parsedLower) || 
+                   parsedLower.contains(brandLower) ||
+                   brand.name == brandName
+        }
+        
+        if let matched = matchedBrand {
+            selectedBrand = matched
+            useCustomBrand = false
+        } else {
+            // No match found - use as custom brand name
+            customBrandName = brandName
+            useCustomBrand = true
+            selectedBrand = nil
+        }
     }
     
     private func saveQuickLog() {
@@ -249,12 +456,16 @@ struct CustomDrinkEntrySheet: View {
         let estimated = NutritionEstimator.estimate(from: drinkName)
         
         // Use override if provided, otherwise use estimate
+        // Formula: (baseCalories * sizeMultiplier * sugarMultiplier) + bubbleCalories
+        // Apply minimum floor of 150 kcal to avoid saving 0
         let finalCalories: Double
         if let override = Double(calorieOverride), !calorieOverride.isEmpty {
-            finalCalories = override // Override is final, no multipliers
+            finalCalories = max(override, 150) // Override with minimum floor
         } else {
-            // Apply multipliers to estimate
-            finalCalories = estimated.calories * selectedSize.multiplier * selectedSugarLevel.multiplier
+            // Apply multipliers to estimate with bubble addition and minimum floor
+            let baseCalc = estimated.calories * selectedSize.multiplier * selectedSugarLevel.multiplier
+            let calculated = baseCalc + selectedBubble.calorieAddition
+            finalCalories = max(calculated, 150)
         }
         
         // Sugar always uses multipliers (not overridable)
@@ -310,6 +521,7 @@ struct CustomDrinkEntrySheet: View {
             size: selectedSize,
             sugarLevel: selectedSugarLevel,
             iceLevel: selectedIce,
+            bubbleLevel: selectedBubble,
             calories: finalCalories,
             sugarGrams: finalSugar,
             price: price,
