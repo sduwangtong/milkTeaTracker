@@ -6,13 +6,32 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F7F749242F231AE50028B867 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = F7F749232F231AE50028B867 /* GoogleMobileAds */; };
+		F7F749292F231AE50028B867 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F7F749282F231AE50028B867 /* GoogleSignIn */; };
+		F7F7492B2F231AE50028B867 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F7F7492A2F231AE50028B867 /* GoogleSignInSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		F78F46372F15A5610012F87E /* milkTeaTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = milkTeaTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F7F749262F231C870028B867 /* Exceptions for "milkTeaTracker" folder in "milkTeaTracker" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F78F46362F15A5610012F87E /* milkTeaTracker */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F78F46392F15A5610012F87E /* milkTeaTracker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F7F749262F231C870028B867 /* Exceptions for "milkTeaTracker" folder in "milkTeaTracker" target */,
+			);
 			path = milkTeaTracker;
 			sourceTree = "<group>";
 		};
@@ -23,6 +42,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F7F749242F231AE50028B867 /* GoogleMobileAds in Frameworks */,
+				F7F749292F231AE50028B867 /* GoogleSignIn in Frameworks */,
+				F7F7492B2F231AE50028B867 /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +87,9 @@
 			);
 			name = milkTeaTracker;
 			packageProductDependencies = (
+				F7F749232F231AE50028B867 /* GoogleMobileAds */,
+				F7F749282F231AE50028B867 /* GoogleSignIn */,
+				F7F7492A2F231AE50028B867 /* GoogleSignInSwift */,
 			);
 			productName = milkTeaTracker;
 			productReference = F78F46372F15A5610012F87E /* milkTeaTracker.app */;
@@ -95,6 +120,10 @@
 			);
 			mainGroup = F78F462E2F15A5610012F87E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F7F749222F231AE50028B867 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				F7F749272F231AE50028B867 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F78F46382F15A5610012F87E /* Products */;
 			projectDirPath = "";
@@ -256,15 +285,20 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GEMINI_API_KEY = "AIzaSyB8RN6LvqSCFdeqmwbZ5hKZ3YMpOc1SSCxC-NgGZ2MuGADXesw";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = milkTeaTracker/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan receipts to automatically extract drink information like price, sugar level, and ice level.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save your milk tea consumption trends as an image to your Photos library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Select receipt images from your photo library to extract drink information.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -301,15 +335,20 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GEMINI_API_KEY = "AIzaSyB8RN6LvqSCFdeqmwbZ5hKZ3YMpOc1SSCxC-NgGZ2MuGADXesw";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = milkTeaTracker/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan receipts to automatically extract drink information like price, sugar level, and ice level.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save your milk tea consumption trends as an image to your Photos library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Select receipt images from your photo library to extract drink information.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -354,6 +393,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F7F749222F231AE50028B867 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.14.0;
+			};
+		};
+		F7F749272F231AE50028B867 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F7F749232F231AE50028B867 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F7F749222F231AE50028B867 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+		F7F749282F231AE50028B867 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F7F749272F231AE50028B867 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		F7F7492A2F231AE50028B867 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F7F749272F231AE50028B867 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F78F462F2F15A5610012F87E /* Project object */;
 }

@@ -54,15 +54,15 @@ struct GoalProgressRow: View {
                 .scaleEffect(x: 1, y: 2, anchor: .center)
             
             if let goal = goal, remaining > 0 {
-                if unit == "cups" {
-                    Text("Can still drink \(remaining) more cups")
-                        .font(.system(size: 14))
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("Can still consume \(remaining) kcal")
-                        .font(.system(size: 14))
-                        .foregroundStyle(.secondary)
-                }
+            if unit == "cups" {
+                Text(String(format: String(localized: "can_still_drink"), remaining))
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+            } else {
+                Text(String(format: String(localized: "can_still_consume"), remaining))
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+            }
             }
         }
         .sheet(isPresented: $isEditing) {

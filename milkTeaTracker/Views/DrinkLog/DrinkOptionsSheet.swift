@@ -16,6 +16,7 @@ struct DrinkOptionsSheet: View {
     
     @Environment(\.modelContext) private var modelContext
     @Environment(LanguageManager.self) private var languageManager
+    @Environment(AuthManager.self) private var authManager
     
     @Query private var allBrands: [Brand]
     @Query private var allDrinkTemplates: [DrinkTemplate]
@@ -24,6 +25,7 @@ struct DrinkOptionsSheet: View {
     @State private var selectedSugar: SugarLevel = .regular
     @State private var selectedIce: IceLevel = .regular
     @State private var priceText: String = ""
+    @FocusState private var isPriceFocused: Bool
     
     // Re-fetch objects from context to avoid detached model issues
     private var brand: Brand? {
@@ -116,6 +118,7 @@ struct DrinkOptionsSheet: View {
                         TextField("0.00", text: $priceText)
                             .keyboardType(.decimalPad)
                             .textFieldStyle(.roundedBorder)
+                            .focused($isPriceFocused)
                     }
                     
                     // Nutrition Preview
@@ -176,6 +179,14 @@ struct DrinkOptionsSheet: View {
                 }
                 .navigationTitle(String(localized: "select_drink"))
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            isPriceFocused = false
+                        }
+                    }
+                }
                 .onAppear {
                     // Pre-fill price from drink template
                     if let basePrice = template.basePrice {
@@ -214,6 +225,20 @@ struct DrinkOptionsSheet: View {
         
         modelContext.insert(drinkLog)
         try? modelContext.save()
+        
+        // Log to Google Sheets with location (fire-and-forget)
+        if let user = authManager.currentUser,
+           let email = user.email {
+            Task {
+                let location = await LocationManager.shared.getLocationForLogging()
+                await DrinkLoggerService.shared.logDrink(
+                    email: email,
+                    name: user.displayName ?? "Unknown",
+                    drink: drinkLog,
+                    location: location
+                )
+            }
+        }
         
         toastManager.show(String(localized: "logged_toast"))
         onSave()

@@ -15,4 +15,8 @@ struct FeatureFlags {
     /// Shows the Trends tab in the main tab bar
     /// Enable this in the next version
     static let showTrends = false
+    
+    /// Shows ads in the app (can be disabled by in-app purchase)
+    /// Set to true to enable AdMob integration
+    static let showAds = true
 }

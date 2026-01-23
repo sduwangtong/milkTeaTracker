@@ -33,11 +33,20 @@ struct MainTabView: View {
                     }
                     .tag(2)
             }
+            
+            ProfileView()
+                .tabItem {
+                    Label(String(localized: "profile"), systemImage: "person.circle")
+                }
+                .tag(3)
         }
         .tint(Color(red: 0.93, green: 0.26, blue: 0.55)) // Pink accent color
         .onAppear {
             // Seed sample data on first launch
             SampleData.seedIfNeeded(context: modelContext)
+            
+            // Request location permission for drink logging
+            LocationManager.shared.requestPermission()
         }
     }
 }

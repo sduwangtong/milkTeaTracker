@@ -29,7 +29,7 @@ struct DailyLogSection: View {
                     Image(systemName: "cup.and.saucer")
                         .font(.system(size: 48))
                         .foregroundStyle(.secondary)
-                    Text("No drinks logged this month")
+                    Text(String(localized: "no_drinks_logged"))
                         .font(.system(size: 16))
                         .foregroundStyle(.secondary)
                 }

@@ -12,10 +12,12 @@ import VisionKit
 struct CustomDrinkEntrySheet: View {
     let toastManager: ToastManager
     let onSave: () -> Void
+    var initialReceipt: ParsedReceipt? = nil
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(LanguageManager.self) private var languageManager
+    @Environment(AuthManager.self) private var authManager
     
     @Query(sort: \Brand.name) private var allBrands: [Brand]
     
@@ -44,6 +46,8 @@ struct CustomDrinkEntrySheet: View {
     @FocusState private var focusedField: Field?
     
     enum Field {
+        case drinkName
+        case brandName
         case calorieOverride
         case price
     }
@@ -88,6 +92,9 @@ struct CustomDrinkEntrySheet: View {
                     
                     TextField(String(localized: "enter_drink_name"), text: $drinkName)
                         .textFieldStyle(.roundedBorder)
+                        .focused($focusedField, equals: .drinkName)
+                        .submitLabel(.done)
+                        .onSubmit { focusedField = nil }
                         .onChange(of: drinkName) { oldValue, newValue in
                             let estimated = NutritionEstimator.estimate(from: newValue)
                             baseEstimatedCalories = estimated.calories
@@ -104,6 +111,9 @@ struct CustomDrinkEntrySheet: View {
                         HStack {
                             TextField(String(localized: "enter_brand_name"), text: $customBrandName)
                                 .textFieldStyle(.roundedBorder)
+                                .focused($focusedField, equals: .brandName)
+                                .submitLabel(.done)
+                                .onSubmit { focusedField = nil }
                             
                             Button {
                                 useCustomBrand = false
@@ -284,10 +294,23 @@ struct CustomDrinkEntrySheet: View {
             .padding()
             .navigationTitle(String(localized: "custom_drink_title"))
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        focusedField = nil
+                    }
+                }
+            }
             .onAppear {
                 // Initialize base estimate for default drink name
                 let estimated = NutritionEstimator.estimate(from: drinkName)
                 baseEstimatedCalories = estimated.calories
+                
+                // If we have an initial receipt from Snap, process it
+                if let receipt = initialReceipt {
+                    handleParsedReceipt(receipt)
+                }
             }
             .overlay {
                 // Full-screen progress overlay while processing receipt
@@ -530,6 +553,20 @@ struct CustomDrinkEntrySheet: View {
         
         modelContext.insert(drinkLog)
         try? modelContext.save()
+        
+        // Log to Google Sheets with location (fire-and-forget)
+        if let user = authManager.currentUser,
+           let email = user.email {
+            Task {
+                let location = await LocationManager.shared.getLocationForLogging()
+                await DrinkLoggerService.shared.logDrink(
+                    email: email,
+                    name: user.displayName ?? "Unknown",
+                    drink: drinkLog,
+                    location: location
+                )
+            }
+        }
         
         toastManager.show(String(localized: "logged_toast"))
         

@@ -11,6 +11,7 @@ import SwiftData
 struct DrinkLogView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(LanguageManager.self) private var languageManager
+    @Environment(AuthManager.self) private var authManager
     @State private var toastManager = ToastManager()
     
     @Query(sort: \Brand.name) private var allBrands: [Brand]
@@ -21,6 +22,11 @@ struct DrinkLogView: View {
     @State private var showingCustomDrinkEntry = false
     @State private var selectedDrinkLog: DrinkLog?
     @State private var showingAllDrinks = false
+    
+    // Snap camera state
+    @State private var showingSnapCamera = false
+    @State private var parsedReceipt: ParsedReceipt?
+    @State private var isProcessingSnap = false
     
     private var popularBrands: [Brand] {
         allBrands.filter { $0.isPopular }
@@ -56,23 +62,50 @@ struct DrinkLogView: View {
                         .padding(.horizontal)
                     }
                     
-                    // Quick Log Button (moved to top)
-                    Button(action: {
-                        showingCustomDrinkEntry = true
-                    }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 28))
-                            Text(String(localized: "custom_drink_button"))
-                                .font(.system(size: 18, weight: .bold))
+                    // Quick Log and Snap Buttons
+                    HStack(spacing: 12) {
+                        // Quick Log Button
+                        Button(action: {
+                            showingCustomDrinkEntry = true
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 24))
+                                Text(String(localized: "custom_drink_button"))
+                                    .font(.system(size: 16, weight: .bold))
+                            }
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 18)
+                            .background(Color(red: 0.93, green: 0.26, blue: 0.55))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .background(Color(red: 0.93, green: 0.26, blue: 0.55))
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        
+                        // Snap Button - direct camera access
+                        Button(action: {
+                            showingSnapCamera = true
+                        }) {
+                            VStack(spacing: 4) {
+                                Image(systemName: "camera.fill")
+                                    .font(.system(size: 24))
+                                Text(String(localized: "snap_button"))
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                            .foregroundStyle(.white)
+                            .frame(width: 70)
+                            .padding(.vertical, 12)
+                            .background(Color(red: 0.2, green: 0.6, blue: 0.86))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                        }
+                        .disabled(isProcessingSnap)
                     }
                     .padding(.horizontal)
+                    
+                    // Banner Ad (between Quick Log and content)
+                    if FeatureFlags.showAds && AdManager.shared.shouldShowAds() {
+                        BannerAdView()
+                            .padding(.horizontal)
+                    }
                     
                     // Popular Brands Section
                     if FeatureFlags.showPopularBrands {
@@ -161,7 +194,14 @@ struct DrinkLogView: View {
                 DrinkSelectionView(brand: brand, toastManager: toastManager)
             }
             .sheet(isPresented: $showingCustomDrinkEntry) {
-                CustomDrinkEntrySheet(toastManager: toastManager, onSave: {})
+                CustomDrinkEntrySheet(
+                    toastManager: toastManager,
+                    onSave: {
+                        // Clear parsed receipt after saving
+                        parsedReceipt = nil
+                    },
+                    initialReceipt: parsedReceipt
+                )
             }
             .sheet(item: $selectedDrinkLog) { log in
                 EditDrinkLogSheet(drinkLog: log, toastManager: toastManager, onSave: {
@@ -171,11 +211,57 @@ struct DrinkLogView: View {
             .sheet(isPresented: $showingAllDrinks) {
                 AllDrinksListView()
             }
+            .sheet(isPresented: $showingSnapCamera) {
+                ReceiptScannerView(parsedReceipt: $parsedReceipt, isProcessing: $isProcessingSnap)
+            }
+            .overlay {
+                // AI Processing overlay for Snap feature
+                if isProcessingSnap {
+                    ZStack {
+                        Color.black.opacity(0.5)
+                            .ignoresSafeArea()
+                        
+                        VStack(spacing: 20) {
+                            ZStack {
+                                // Camera icon
+                                Image(systemName: "camera.fill")
+                                    .font(.system(size: 50))
+                                    .foregroundStyle(.white)
+                                
+                                // Sparkles around camera
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(.yellow)
+                                    .offset(x: 30, y: -25)
+                            }
+                            
+                            Text(String(localized: "snap_processing"))
+                                .font(.headline)
+                                .foregroundStyle(.white)
+                            
+                            ProgressView()
+                                .tint(.white)
+                                .scaleEffect(1.2)
+                        }
+                        .padding(40)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                    }
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.3), value: isProcessingSnap)
+                }
+            }
         }
         .toast(toastManager)
         .onAppear {
             // Seed sample data if needed
             SampleData.seedIfNeeded(context: modelContext)
+        }
+        .onChange(of: parsedReceipt) { _, newValue in
+            // When snap camera returns a parsed receipt, open custom drink entry with data
+            if newValue != nil {
+                showingCustomDrinkEntry = true
+            }
         }
     }
     
@@ -198,6 +284,20 @@ struct DrinkLogView: View {
         
         modelContext.insert(newLog)
         try? modelContext.save()
+        
+        // Log to Google Sheets with location (fire-and-forget)
+        if let user = authManager.currentUser,
+           let email = user.email {
+            Task {
+                let location = await LocationManager.shared.getLocationForLogging()
+                await DrinkLoggerService.shared.logDrink(
+                    email: email,
+                    name: user.displayName ?? "Unknown",
+                    drink: newLog,
+                    location: location
+                )
+            }
+        }
         
         toastManager.show(String(localized: "logged_toast"))
     }
