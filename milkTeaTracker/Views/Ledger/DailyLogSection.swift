@@ -20,7 +20,7 @@ struct DailyLogSection: View {
             HStack {
                 Image(systemName: "calendar")
                     .foregroundStyle(.secondary)
-                Text(String(localized: "daily_log"))
+                Text(languageManager.localizedString("daily_log"))
                     .font(.system(size: 18, weight: .semibold))
             }
             
@@ -29,7 +29,7 @@ struct DailyLogSection: View {
                     Image(systemName: "cup.and.saucer")
                         .font(.system(size: 48))
                         .foregroundStyle(.secondary)
-                    Text(String(localized: "no_drinks_logged"))
+                    Text(languageManager.localizedString("no_drinks_logged"))
                         .font(.system(size: 16))
                         .foregroundStyle(.secondary)
                 }

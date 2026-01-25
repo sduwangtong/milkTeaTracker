@@ -81,6 +81,12 @@ class ReceiptProcessingService {
             do {
                 let receipt = try await GeminiService.processReceiptImage(image)
                 print("Receipt processed successfully with Gemini API")
+                
+                // Decrement free scan count after successful Gemini API usage
+                await MainActor.run {
+                    FreeUsageManager.shared.useOneScan()
+                }
+                
                 return ReceiptProcessingResult(receipt: receipt, usedFallback: false, error: nil)
             } catch {
                 print("Gemini API failed: \(error.localizedDescription), falling back to OCR")
@@ -90,7 +96,7 @@ class ReceiptProcessingService {
             print("Gemini API not configured, using OCR fallback")
         }
         
-        // Fallback to Vision OCR
+        // Fallback to Vision OCR (free - doesn't count against limit)
         let receipt = await ReceiptOCRService.processImage(image)
         return ReceiptProcessingResult(receipt: receipt, usedFallback: true, error: nil)
     }

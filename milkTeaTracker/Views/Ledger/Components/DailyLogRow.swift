@@ -22,9 +22,9 @@ struct DailyLogRow: View {
                     .foregroundStyle(.primary)
                 
                 HStack(spacing: 6) {
-                    Text(log.size.localizedName)
+                    Text(log.size.localizedName(using: languageManager))
                     Text("•")
-                    Text(log.sugarLevel.localizedName)
+                    Text(log.sugarLevel.localizedName(using: languageManager))
                     if let price = log.price {
                         Text("•")
                         Text("$\(String(format: "%.2f", price))")

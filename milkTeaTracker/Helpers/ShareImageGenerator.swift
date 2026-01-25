@@ -10,9 +10,9 @@ import UIKit
 
 struct ShareImageGenerator {
     @MainActor
-    static func generateImage(from summary: TrendSummary, languageManager: LanguageManager, cupGoal: Int? = nil, calorieGoal: Double? = nil) -> UIImage? {
+    static func generateImage(from summary: TrendSummary, languageManager: LanguageManager, cupGoal: Int? = nil) -> UIImage? {
         // Create the share card view with explicit sizing
-        let card = ShareCard(summary: summary, cupGoal: cupGoal, calorieGoal: calorieGoal)
+        let card = ShareCard(summary: summary, cupGoal: cupGoal)
             .environment(languageManager)
             .frame(width: 400, height: 650)
         
@@ -26,12 +26,12 @@ struct ShareImageGenerator {
         }
         
         // Fallback: use UIHostingController
-        return fallbackRender(summary: summary, languageManager: languageManager, cupGoal: cupGoal, calorieGoal: calorieGoal)
+        return fallbackRender(summary: summary, languageManager: languageManager, cupGoal: cupGoal)
     }
     
     @MainActor
-    private static func fallbackRender(summary: TrendSummary, languageManager: LanguageManager, cupGoal: Int?, calorieGoal: Double?) -> UIImage? {
-        let card = ShareCard(summary: summary, cupGoal: cupGoal, calorieGoal: calorieGoal)
+    private static func fallbackRender(summary: TrendSummary, languageManager: LanguageManager, cupGoal: Int?) -> UIImage? {
+        let card = ShareCard(summary: summary, cupGoal: cupGoal)
             .environment(languageManager)
             .frame(width: 400, height: 650)
         
@@ -50,7 +50,6 @@ struct ShareImageGenerator {
 struct ShareCard: View {
     let summary: TrendSummary
     let cupGoal: Int?
-    let calorieGoal: Double?
     @Environment(LanguageManager.self) private var languageManager
     
     var body: some View {
@@ -59,7 +58,7 @@ struct ShareCard: View {
             Color.white
             
             // Card content with padding
-            TrendSummaryCard(summary: summary, cupGoal: cupGoal, calorieGoal: calorieGoal)
+            TrendSummaryCard(summary: summary, cupGoal: cupGoal)
                 .padding(20)
         }
         .frame(width: 400, height: 650)

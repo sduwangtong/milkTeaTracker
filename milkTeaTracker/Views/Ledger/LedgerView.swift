@@ -47,6 +47,8 @@ struct LedgerView: View {
     
     private var userGoals: UserGoals {
         if let existing = goals.first {
+            // Run migration if needed
+            existing.migrateIfNeeded()
             return existing
         }
         
@@ -57,8 +59,26 @@ struct LedgerView: View {
         return newGoals
     }
     
+    /// Cup goal for the summary card (only show when viewing weekly)
     private var currentCupGoal: Int? {
-        selectedPeriod == .weekly ? userGoals.weeklyCupGoal : userGoals.monthlyCupGoal
+        // Only show goal progress when viewing weekly (goal is always weekly)
+        guard selectedPeriod == .weekly else { return nil }
+        return userGoals.weeklyCupGoal
+    }
+    
+    /// Current cups for goal progress (always current week)
+    private var cupsForGoal: Int {
+        allLogs.forWeek(containing: Date()).count
+    }
+    
+    /// Trend data for the mini chart
+    private var trendData: [PeriodCupCount] {
+        switch selectedPeriod {
+        case .weekly:
+            return allLogs.lastNWeeksCupCounts(4, referenceDate: selectedDate)
+        case .monthly:
+            return allLogs.lastNMonthsCupCounts(4, referenceDate: selectedDate)
+        }
     }
     
     private var dateRangeText: String {
@@ -120,11 +140,11 @@ struct LedgerView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 20) {
                     // Time Period Selector
                     Picker("Period", selection: $selectedPeriod) {
-                        Text(String(localized: "by_week")).tag(TimePeriod.weekly)
-                        Text(String(localized: "by_month")).tag(TimePeriod.monthly)
+                        Text(languageManager.localizedString("by_week")).tag(TimePeriod.weekly)
+                        Text(languageManager.localizedString("by_month")).tag(TimePeriod.monthly)
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
@@ -161,23 +181,37 @@ struct LedgerView: View {
                     .padding(.horizontal, 24)
                     .padding(.vertical, 8)
                     
+                    // Banner Ad
+                    if FeatureFlags.showAds && AdManager.shared.shouldShowAds() {
+                        BannerAdView()
+                            .padding(.horizontal)
+                    }
+                    
+                    // Summary Card
                     MonthlySummaryCard(summary: periodSummary, period: selectedPeriod, cupGoal: currentCupGoal)
                         .padding(.horizontal)
                     
-                    MonthlyGoalsSection(
-                        summary: periodSummary,
-                        goals: userGoals,
-                        period: selectedPeriod
-                    )
-                    .padding(.horizontal)
+                    // Trend Mini Chart (last 4 periods)
+                    TrendMiniChart(periodData: trendData, period: selectedPeriod)
+                        .padding(.horizontal)
                     
+                    // Goal Section - only show when viewing weekly (goal is always weekly)
+                    if selectedPeriod == .weekly {
+                        GoalSection(
+                            currentCups: cupsForGoal,
+                            goals: userGoals
+                        )
+                        .padding(.horizontal)
+                    }
+                    
+                    // Daily Logs
                     DailyLogSection(logs: filteredLogs)
                         .padding(.horizontal)
                 }
                 .padding(.vertical)
             }
             .background(Color(red: 0.95, green: 0.95, blue: 0.97))
-            .navigationTitle(String(localized: "ledger"))
+            .navigationTitle(languageManager.localizedString("ledger"))
             .navigationBarTitleDisplayMode(.large)
         }
     }

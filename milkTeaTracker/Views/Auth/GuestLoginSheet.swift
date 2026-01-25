@@ -36,11 +36,11 @@ struct GuestLoginSheet: View {
                             )
                         )
                     
-                    Text("Continue as Guest")
+                    Text(String(localized: "continue_guest"))
                         .font(.title2)
                         .fontWeight(.bold)
                     
-                    Text("Enter your details to track your drinks")
+                    Text(String(localized: "guest_details_subtitle"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -51,12 +51,12 @@ struct GuestLoginSheet: View {
                 VStack(spacing: 16) {
                     // Email field
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Email")
+                        Text(String(localized: "email"))
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(.secondary)
                         
-                        TextField("your@email.com", text: $email)
+                        TextField(String(localized: "email_placeholder"), text: $email)
                             .textFieldStyle(.plain)
                             .keyboardType(.emailAddress)
                             .textContentType(.emailAddress)
@@ -74,12 +74,12 @@ struct GuestLoginSheet: View {
                     
                     // Name field
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Name or Nickname")
+                        Text(String(localized: "name_nickname"))
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(.secondary)
                         
-                        TextField("What should we call you?", text: $name)
+                        TextField(String(localized: "name_placeholder"), text: $name)
                             .textFieldStyle(.plain)
                             .textContentType(.name)
                             .focused($focusedField, equals: .name)
@@ -102,7 +102,7 @@ struct GuestLoginSheet: View {
                         continueAsGuest()
                     } label: {
                         HStack {
-                            Text("Continue as Guest")
+                            Text(String(localized: "continue_guest"))
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
@@ -120,7 +120,7 @@ struct GuestLoginSheet: View {
                     .disabled(email.isEmpty)
                     .opacity(email.isEmpty ? 0.6 : 1.0)
                     
-                    Text("Your data will be synced to track your habits")
+                    Text(String(localized: "guest_sync_note"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -130,13 +130,13 @@ struct GuestLoginSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button(String(localized: "cancel")) {
                         dismiss()
                     }
                 }
             }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) {}
+            .alert(String(localized: "error"), isPresented: $showError) {
+                Button(String(localized: "ok"), role: .cancel) {}
             } message: {
                 Text(errorMessage)
             }

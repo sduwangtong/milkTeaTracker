@@ -63,6 +63,9 @@ final class AuthManager: NSObject {
     /// Whether authentication is in progress
     private(set) var isLoading = false
     
+    /// Whether session restoration is in progress
+    private(set) var isRestoringSession = true
+    
     /// Last authentication error
     private(set) var error: AuthError?
     
@@ -100,6 +103,8 @@ final class AuthManager: NSObject {
     
     /// Attempt to restore a previous session
     func restoreSession() async -> Bool {
+        defer { isRestoringSession = false }
+        
         // Try to load saved user info and token from keychain
         guard let userData = KeychainHelper.load(key: KeychainKey.userInfo),
               let userInfo = try? JSONDecoder().decode(UserInfo.self, from: userData),
@@ -290,12 +295,13 @@ final class AuthManager: NSObject {
                 photoURL: photoURL
             )
             
-            // Google tokens typically expire in 1 hour
-            let expiresAt = Date().addingTimeInterval(3600)
+            // Don't expire Google tokens locally - let server handle validation
+            // The GIDSignIn SDK doesn't persist currentUser after app restart,
+            // so local expiration causes unnecessary logouts
             let token = AuthToken(
                 idToken: idToken,
                 provider: .google,
-                expiresAt: expiresAt
+                expiresAt: nil
             )
             
             saveSession(userInfo: userInfo, token: token)
@@ -472,7 +478,7 @@ final class AuthManager: NSObject {
             let token = AuthToken(
                 idToken: idToken,
                 provider: .google,
-                expiresAt: Date().addingTimeInterval(3600)
+                expiresAt: nil
             )
             
             if let tokenData = try? JSONEncoder().encode(token) {

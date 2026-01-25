@@ -25,11 +25,23 @@ struct BannerAdView: View {
         Group {
             #if canImport(GoogleMobileAds)
             if AdManager.shared.shouldShowAds() {
-                BannerAdViewRepresentable(adUnitID: adUnitID, adHeight: $adHeight, isAdLoaded: $isAdLoaded)
-                    .frame(height: isAdLoaded ? adHeight : 60) // Give initial height so layout works
-                    .frame(maxWidth: .infinity)
-                    .opacity(isAdLoaded ? 1 : 0)
-                    .animation(.easeInOut(duration: 0.3), value: isAdLoaded)
+                GeometryReader { geometry in
+                    if geometry.size.width > 0 {
+                        BannerAdViewRepresentable(
+                            adUnitID: adUnitID,
+                            containerWidth: geometry.size.width,
+                            adHeight: $adHeight,
+                            isAdLoaded: $isAdLoaded
+                        )
+                        .onAppear {
+                            print("[BannerAdView] Appearing with width: \(geometry.size.width), adUnitID: \(adUnitID)")
+                        }
+                    }
+                }
+                .frame(height: isAdLoaded ? adHeight : 60)
+                .frame(maxWidth: .infinity)
+                .opacity(isAdLoaded ? 1 : 0)
+                .animation(.easeInOut(duration: 0.3), value: isAdLoaded)
             }
             #else
             // Placeholder when SDK is not available (for previews/simulators)
@@ -64,6 +76,7 @@ struct BannerAdView: View {
 @MainActor
 struct BannerAdViewRepresentable: UIViewRepresentable {
     let adUnitID: String
+    let containerWidth: CGFloat
     @Binding var adHeight: CGFloat
     @Binding var isAdLoaded: Bool
     
@@ -72,12 +85,14 @@ struct BannerAdViewRepresentable: UIViewRepresentable {
     }
     
     func makeUIView(context: Context) -> UIView {
+        print("[BannerAd] makeUIView called with containerWidth: \(containerWidth)")
+        
         // Create a container view
         let containerView = UIView()
         containerView.backgroundColor = .clear
         
-        // Create the banner view - we'll set the size in updateUIView when we have proper dimensions
-        let bannerView = BannerView()
+        // Create the banner view with proper size
+        let bannerView = BannerView(adSize: AdSizeBanner)
         bannerView.adUnitID = adUnitID
         bannerView.delegate = context.coordinator
         bannerView.translatesAutoresizingMaskIntoConstraints = false
@@ -86,6 +101,9 @@ struct BannerAdViewRepresentable: UIViewRepresentable {
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let rootViewController = windowScene.windows.first?.rootViewController {
             bannerView.rootViewController = rootViewController
+            print("[BannerAd] rootViewController set successfully")
+        } else {
+            print("[BannerAd] Warning: No rootViewController available")
         }
         
         containerView.addSubview(bannerView)
@@ -99,40 +117,21 @@ struct BannerAdViewRepresentable: UIViewRepresentable {
         // Store reference to banner view in coordinator
         context.coordinator.bannerView = bannerView
         
+        // Load the ad immediately since we have the width
+        let request = Request()
+        bannerView.load(request)
+        print("[BannerAd] Ad request sent with adUnitID: \(adUnitID)")
+        
         return containerView
     }
     
     func updateUIView(_ uiView: UIView, context: Context) {
-        guard let bannerView = context.coordinator.bannerView else { return }
-        
-        // Get the width from the container view
-        let frame = uiView.frame
-        guard frame.width > 0 else { return }
-        
-        // Only load if we haven't loaded yet and have proper dimensions
-        if !context.coordinator.hasRequestedAd {
-            // Use adaptive banner size based on current width
-            let adSize = currentOrientationAnchoredAdaptiveBanner(width: frame.width)
-            bannerView.adSize = adSize
-            
-            // Load the ad
-            let request = Request()
-            bannerView.load(request)
-            context.coordinator.hasRequestedAd = true
-            
-            print("[BannerAd] Loading ad with width: \(frame.width)")
-        }
-    }
-    
-    /// Get adaptive banner size for current orientation
-    private func currentOrientationAnchoredAdaptiveBanner(width: CGFloat) -> AdSize {
-        return AdSizeBanner
+        // No need to do anything here - ad is loaded in makeUIView
     }
     
     class Coordinator: NSObject, BannerViewDelegate {
         let parent: BannerAdViewRepresentable
         var bannerView: BannerView?
-        var hasRequestedAd = false
         
         init(_ parent: BannerAdViewRepresentable) {
             self.parent = parent

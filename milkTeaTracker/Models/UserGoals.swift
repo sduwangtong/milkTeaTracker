@@ -11,24 +11,53 @@ import SwiftData
 @Model
 final class UserGoals {
     @Attribute(.unique) var id: UUID
+    
+    // Simple weekly cup goal - one number, no choices
+    var weeklyCupGoal: Int?
+    
+    // Legacy properties for migration (kept for SwiftData schema compatibility)
+    var cupGoal: Int?
+    var goalFrequencyRaw: String?
     var monthlyCupGoal: Int?
     var monthlyCalorieGoal: Double?
-    var weeklyCupGoal: Int?
     var weeklyCalorieGoal: Double?
+    
     var createdDate: Date
     var lastUpdated: Date
+    var hasMigrated: Bool = false
     
-    init(id: UUID = UUID(),
-         monthlyCupGoal: Int? = nil,
-         monthlyCalorieGoal: Double? = nil,
-         weeklyCupGoal: Int? = nil,
-         weeklyCalorieGoal: Double? = nil) {
+    init(id: UUID = UUID(), weeklyCupGoal: Int? = nil) {
         self.id = id
-        self.monthlyCupGoal = monthlyCupGoal
-        self.monthlyCalorieGoal = monthlyCalorieGoal
         self.weeklyCupGoal = weeklyCupGoal
-        self.weeklyCalorieGoal = weeklyCalorieGoal
         self.createdDate = Date()
         self.lastUpdated = Date()
+        self.hasMigrated = true
+    }
+    
+    /// Migrate from old models to simple weekly goal
+    func migrateIfNeeded() {
+        guard !hasMigrated else { return }
+        
+        // Migration priority:
+        // 1. Use existing weeklyCupGoal if set
+        // 2. Use cupGoal if it was set (from previous migration)
+        // 3. Convert monthlyCupGoal to weekly (divide by 4)
+        if weeklyCupGoal == nil {
+            if let cup = cupGoal {
+                weeklyCupGoal = cup
+            } else if let monthly = monthlyCupGoal {
+                weeklyCupGoal = monthly / 4
+            }
+        }
+        
+        // Clear all legacy values
+        cupGoal = nil
+        goalFrequencyRaw = nil
+        monthlyCupGoal = nil
+        monthlyCalorieGoal = nil
+        weeklyCalorieGoal = nil
+        
+        hasMigrated = true
+        lastUpdated = Date()
     }
 }

@@ -15,6 +15,7 @@ struct GoalProgressRow: View {
     let color: Color
     @Binding var isEditing: Bool
     let onSave: (Int) -> Void
+    @Environment(LanguageManager.self) private var languageManager
     
     private var progress: Double {
         guard let goal = goal, goal > 0 else { return 0 }
@@ -29,22 +30,30 @@ struct GoalProgressRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(LocalizedStringKey(title))
+                Text(languageManager.localizedString(title))
                     .font(.system(size: 16))
                 
                 Spacer()
                 
                 if let goal = goal {
                     Button(action: { isEditing = true }) {
-                        Text("\(current)/\(goal) \(unit)")
-                            .font(.system(size: 16))
-                            .foregroundStyle(.primary)
+                        HStack(spacing: 4) {
+                            Text("\(current)/\(goal) \(languageManager.localizedString(unit))")
+                                .font(.system(size: 16))
+                            Image(systemName: "pencil")
+                                .font(.system(size: 12))
+                        }
+                        .foregroundStyle(Color(red: 0.93, green: 0.26, blue: 0.55))
                     }
                 } else {
                     Button(action: { isEditing = true }) {
-                        Text(String(localized: "set_goal"))
-                            .font(.system(size: 16))
-                            .foregroundStyle(Color(red: 0.93, green: 0.26, blue: 0.55))
+                        HStack(spacing: 4) {
+                            Text(languageManager.localizedString("set_goal"))
+                                .font(.system(size: 16))
+                            Image(systemName: "plus.circle")
+                                .font(.system(size: 12))
+                        }
+                        .foregroundStyle(Color(red: 0.93, green: 0.26, blue: 0.55))
                     }
                 }
             }
@@ -55,11 +64,11 @@ struct GoalProgressRow: View {
             
             if let goal = goal, remaining > 0 {
             if unit == "cups" {
-                Text(String(format: String(localized: "can_still_drink"), remaining))
+                Text(languageManager.localizedString("can_still_drink", args: remaining))
                     .font(.system(size: 14))
                     .foregroundStyle(.secondary)
             } else {
-                Text(String(format: String(localized: "can_still_consume"), remaining))
+                Text(languageManager.localizedString("can_still_consume", args: remaining))
                     .font(.system(size: 14))
                     .foregroundStyle(.secondary)
             }

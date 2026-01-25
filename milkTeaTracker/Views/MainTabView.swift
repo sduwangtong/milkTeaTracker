@@ -10,33 +10,34 @@ import SwiftData
 
 struct MainTabView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(LanguageManager.self) private var languageManager
     @State private var selectedTab = 0
     
     var body: some View {
         TabView(selection: $selectedTab) {
             DrinkLogView()
                 .tabItem {
-                    Label(String(localized: "drink_log"), systemImage: "cup.and.saucer.fill")
+                    Label(languageManager.localizedString("drink_log"), systemImage: "cup.and.saucer.fill")
                 }
                 .tag(0)
             
             LedgerView()
                 .tabItem {
-                    Label(String(localized: "ledger"), systemImage: "list.bullet.rectangle")
+                    Label(languageManager.localizedString("ledger"), systemImage: "list.bullet.rectangle")
                 }
                 .tag(1)
             
             if FeatureFlags.showTrends {
                 TrendsView()
                     .tabItem {
-                        Label(String(localized: "trends"), systemImage: "chart.line.uptrend.xyaxis")
+                        Label(languageManager.localizedString("trends"), systemImage: "chart.line.uptrend.xyaxis")
                     }
                     .tag(2)
             }
             
             ProfileView()
                 .tabItem {
-                    Label(String(localized: "profile"), systemImage: "person.circle")
+                    Label(languageManager.localizedString("profile"), systemImage: "person.circle")
                 }
                 .tag(3)
         }
@@ -91,4 +92,5 @@ struct TrendsPlaceholderView: View {
 #Preview {
     MainTabView()
         .modelContainer(for: [Brand.self, DrinkTemplate.self, DrinkLog.self])
+        .environment(LanguageManager.shared)
 }

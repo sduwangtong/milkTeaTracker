@@ -73,12 +73,12 @@ struct DrinkOptionsSheet: View {
                     
                     // Size Picker
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(String(localized: "size_label"))
+                        Text(languageManager.localizedString("size_label"))
                             .font(.system(size: 16, weight: .semibold))
                         
                         Picker("", selection: $selectedSize) {
                             ForEach(DrinkSize.allCases, id: \.self) { size in
-                                Text(size.localizedName).tag(size)
+                                Text(size.localizedName(using: languageManager)).tag(size)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -86,12 +86,12 @@ struct DrinkOptionsSheet: View {
                     
                     // Sugar Level Picker
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(String(localized: "sugar_label"))
+                        Text(languageManager.localizedString("sugar_label"))
                             .font(.system(size: 16, weight: .semibold))
                         
                         Picker("", selection: $selectedSugar) {
                             ForEach(SugarLevel.allCases, id: \.self) { sugar in
-                                Text(sugar.localizedName).tag(sugar)
+                                Text(sugar.localizedName(using: languageManager)).tag(sugar)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -99,12 +99,12 @@ struct DrinkOptionsSheet: View {
                     
                     // Ice Level Picker
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(String(localized: "ice_label"))
+                        Text(languageManager.localizedString("ice_label"))
                             .font(.system(size: 16, weight: .semibold))
                         
                         Picker("", selection: $selectedIce) {
                             ForEach(IceLevel.allCases, id: \.self) { ice in
-                                Text(ice.localizedName).tag(ice)
+                                Text(ice.localizedName(using: languageManager)).tag(ice)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -182,7 +182,7 @@ struct DrinkOptionsSheet: View {
                 .toolbar {
                     ToolbarItemGroup(placement: .keyboard) {
                         Spacer()
-                        Button("Done") {
+                        Button(String(localized: "done_button")) {
                             isPriceFocused = false
                         }
                     }

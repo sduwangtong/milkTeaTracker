@@ -33,11 +33,11 @@ struct LoginView: View {
                                 )
                             )
                         
-                        Text("Milk Tea Tracker")
+                        Text(String(localized: "app_name"))
                             .font(.largeTitle)
                             .fontWeight(.bold)
                         
-                        Text("Track your bubble tea habits")
+                        Text(String(localized: "app_subtitle"))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -47,7 +47,7 @@ struct LoginView: View {
                     VStack(spacing: 16) {
                         // Sign in with Google
                         SocialLoginButton(
-                            title: "Continue with Google",
+                            title: String(localized: "continue_google"),
                             icon: "g.circle.fill",
                             backgroundColor: .white,
                             foregroundColor: .black,
@@ -60,7 +60,7 @@ struct LoginView: View {
                         
                         // Guest login button (styled similarly)
                         SocialLoginButton(
-                            title: "Continue as Guest",
+                            title: String(localized: "continue_guest"),
                             icon: "person.fill",
                             backgroundColor: Color(.systemGray6),
                             foregroundColor: .primary,
@@ -82,14 +82,14 @@ struct LoginView: View {
                     
                     // Terms and Privacy
                     VStack(spacing: 4) {
-                        Text("By continuing, you agree to our")
+                        Text(String(localized: "legal_agreement"))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                         
                         HStack(spacing: 4) {
-                            Link("Terms of Service", destination: URL(string: "https://example.com/terms")!)
-                            Text("and")
-                            Link("Privacy Policy", destination: URL(string: "https://example.com/privacy")!)
+                            Link(String(localized: "terms_of_service"), destination: URL(string: "https://example.com/terms")!)
+                            Text(String(localized: "and"))
+                            Link(String(localized: "privacy_policy"), destination: URL(string: "https://example.com/privacy")!)
                         }
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -100,8 +100,8 @@ struct LoginView: View {
             }
         }
         .background(Color(.systemGroupedBackground))
-        .alert("Sign In Error", isPresented: $showError) {
-            Button("OK", role: .cancel) {}
+        .alert(String(localized: "sign_in_error"), isPresented: $showError) {
+            Button(String(localized: "ok"), role: .cancel) {}
         } message: {
             Text(errorMessage)
         }

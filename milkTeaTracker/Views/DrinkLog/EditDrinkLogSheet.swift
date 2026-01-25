@@ -62,12 +62,12 @@ struct EditDrinkLogSheet: View {
                 
                 // Size Picker
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(String(localized: "size"))
+                    Text(languageManager.localizedString("size"))
                         .font(.system(size: 16, weight: .semibold))
                     
                     Picker("Size", selection: $selectedSize) {
                         ForEach(DrinkSize.allCases, id: \.self) { size in
-                            Text(size.localizedName).tag(size)
+                            Text(size.localizedName(using: languageManager)).tag(size)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -75,12 +75,12 @@ struct EditDrinkLogSheet: View {
                 
                 // Sugar Level Picker
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(String(localized: "sugar_level"))
+                    Text(languageManager.localizedString("sugar_level"))
                         .font(.system(size: 16, weight: .semibold))
                     
                     Picker("Sugar", selection: $selectedSugarLevel) {
                         ForEach(SugarLevel.allCases, id: \.self) { sugar in
-                            Text(sugar.localizedName).tag(sugar)
+                            Text(sugar.localizedName(using: languageManager)).tag(sugar)
                         }
                     }
                     .pickerStyle(.menu)
@@ -88,12 +88,12 @@ struct EditDrinkLogSheet: View {
                 
                 // Ice Level Picker
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(String(localized: "ice_level"))
+                    Text(languageManager.localizedString("ice_level"))
                         .font(.system(size: 16, weight: .semibold))
                     
                     Picker("Ice", selection: $selectedIce) {
                         ForEach(IceLevel.allCases, id: \.self) { ice in
-                            Text(ice.localizedName).tag(ice)
+                            Text(ice.localizedName(using: languageManager)).tag(ice)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -152,7 +152,7 @@ struct EditDrinkLogSheet: View {
                 // Action Buttons
                 HStack(spacing: 12) {
                     Button(action: { dismiss() }) {
-                        Text("Cancel")
+                        Text(String(localized: "cancel"))
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)

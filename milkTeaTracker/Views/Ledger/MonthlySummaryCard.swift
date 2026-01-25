@@ -19,6 +19,7 @@ struct MonthlySummaryCard: View {
     let summary: MonthlySummary
     let period: TimePeriod
     let cupGoal: Int?
+    @Environment(LanguageManager.self) private var languageManager
     
     private var isOverGoal: Bool {
         guard let goal = cupGoal else { return false }
@@ -63,7 +64,7 @@ struct MonthlySummaryCard: View {
             }
             
             // "Cups this week/month"
-            Text(String(localized: period == .weekly ? "cups_this_week" : "cups_this_month"))
+            Text(languageManager.localizedString(period == .weekly ? "cups_this_week" : "cups_this_month"))
                 .font(.system(size: 18))
                 .foregroundStyle(.white.opacity(0.9))
             
@@ -82,7 +83,7 @@ struct MonthlySummaryCard: View {
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundStyle(.white)
                     
-                    Text(String(localized: "total_calories_short"))
+                    Text(languageManager.localizedString("total_calories_short"))
                         .font(.system(size: 12))
                         .foregroundStyle(.white.opacity(0.8))
                 }
@@ -94,7 +95,7 @@ struct MonthlySummaryCard: View {
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundStyle(.white)
                     
-                    Text(String(localized: "total_sugar_short"))
+                    Text(languageManager.localizedString("total_sugar_short"))
                         .font(.system(size: 12))
                         .foregroundStyle(.white.opacity(0.8))
                 }
@@ -106,7 +107,7 @@ struct MonthlySummaryCard: View {
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundStyle(.white)
                     
-                    Text(String(localized: "total_spend"))
+                    Text(languageManager.localizedString("total_spend"))
                         .font(.system(size: 12))
                         .foregroundStyle(.white.opacity(0.8))
                 }
@@ -119,7 +120,7 @@ struct MonthlySummaryCard: View {
                     Text("🏆")
                         .font(.system(size: 16))
                     
-                    Text(String(localized: "longest_tea_free_streak"))
+                    Text(languageManager.localizedString("longest_tea_free_streak"))
                         .font(.system(size: 14))
                         .foregroundStyle(.white.opacity(0.9))
                     
@@ -127,7 +128,7 @@ struct MonthlySummaryCard: View {
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(.white)
                     
-                    Text(summary.longestTeaFreeStreak == 1 ? String(localized: "day") : String(localized: "days"))
+                    Text(languageManager.localizedString(summary.longestTeaFreeStreak == 1 ? "day" : "days"))
                         .font(.system(size: 14))
                         .foregroundStyle(.white.opacity(0.9))
                 }

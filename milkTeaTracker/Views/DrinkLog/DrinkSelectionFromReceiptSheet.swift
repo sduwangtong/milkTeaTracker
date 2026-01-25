@@ -14,6 +14,7 @@ struct DrinkSelectionFromReceiptSheet: View {
     let onSelect: (ParsedReceiptItem) -> Void
     
     @Environment(\.dismiss) private var dismiss
+    @Environment(LanguageManager.self) private var languageManager
     
     var body: some View {
         NavigationStack {
@@ -33,7 +34,7 @@ struct DrinkSelectionFromReceiptSheet: View {
                 }
                 
                 // Items count
-                Text(String(localized: "multiple_drinks_found"))
+                Text(languageManager.localizedString("multiple_drinks_found"))
                     .font(.system(size: 14))
                     .foregroundStyle(.secondary)
                     .padding(.top, 16)
@@ -43,7 +44,7 @@ struct DrinkSelectionFromReceiptSheet: View {
                 ScrollView {
                     VStack(spacing: 12) {
                         ForEach(items) { item in
-                            DrinkItemRow(item: item) {
+                            DrinkItemRow(item: item, languageManager: languageManager) {
                                 onSelect(item)
                                 dismiss()
                             }
@@ -53,11 +54,11 @@ struct DrinkSelectionFromReceiptSheet: View {
                     .padding(.vertical, 8)
                 }
             }
-            .navigationTitle(String(localized: "select_drink"))
+            .navigationTitle(languageManager.localizedString("select_drink"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(languageManager.localizedString("cancel")) {
                         dismiss()
                     }
                 }
@@ -71,6 +72,7 @@ struct DrinkSelectionFromReceiptSheet: View {
 
 private struct DrinkItemRow: View {
     let item: ParsedReceiptItem
+    let languageManager: LanguageManager
     let onTap: () -> Void
     
     var body: some View {
@@ -87,7 +89,7 @@ private struct DrinkItemRow: View {
                     // Size
                     if let size = item.size {
                         Label {
-                            Text(size.localizedName)
+                            Text(size.localizedName(using: languageManager))
                                 .font(.system(size: 13))
                         } icon: {
                             Image(systemName: "cup.and.saucer.fill")
@@ -99,7 +101,7 @@ private struct DrinkItemRow: View {
                     // Sugar level
                     if let sugar = item.sugarLevel {
                         Label {
-                            Text(sugar.localizedName)
+                            Text(sugar.localizedName(using: languageManager))
                                 .font(.system(size: 13))
                         } icon: {
                             Image(systemName: "cube.fill")
@@ -111,7 +113,7 @@ private struct DrinkItemRow: View {
                     // Ice level
                     if let ice = item.iceLevel {
                         Label {
-                            Text(ice.localizedName)
+                            Text(ice.localizedName(using: languageManager))
                                 .font(.system(size: 13))
                         } icon: {
                             Image(systemName: "snowflake")
@@ -123,7 +125,7 @@ private struct DrinkItemRow: View {
                     // Bubble level
                     if let bubble = item.bubbleLevel {
                         Label {
-                            Text(bubble.localizedName)
+                            Text(bubble.localizedName(using: languageManager))
                                 .font(.system(size: 13))
                         } icon: {
                             Image(systemName: "circle.grid.2x2.fill")

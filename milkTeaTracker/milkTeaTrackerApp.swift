@@ -18,6 +18,7 @@ import FacebookCore
 struct milkTeaTrackerApp: App {
     @State private var languageManager = LanguageManager.shared
     @State private var authManager = AuthManager()
+    @State private var freeUsageManager = FreeUsageManager.shared
     
     /// Whether to require authentication (set to true to show login screen first)
     private let requireAuthentication = true
@@ -43,6 +44,7 @@ struct milkTeaTrackerApp: App {
             ContentWrapperView(
                 authManager: authManager,
                 languageManager: languageManager,
+                freeUsageManager: freeUsageManager,
                 requireAuthentication: requireAuthentication
             )
             .task {
@@ -77,11 +79,15 @@ struct milkTeaTrackerApp: App {
 struct ContentWrapperView: View {
     let authManager: AuthManager
     let languageManager: LanguageManager
+    let freeUsageManager: FreeUsageManager
     let requireAuthentication: Bool
     
     var body: some View {
         Group {
-            if requireAuthentication && !authManager.isAuthenticated {
+            if authManager.isRestoringSession {
+                // Show splash screen while restoring session
+                SplashView()
+            } else if requireAuthentication && !authManager.isAuthenticated {
                 LoginView()
             } else {
                 MainTabView()
@@ -89,5 +95,38 @@ struct ContentWrapperView: View {
         }
         .environment(authManager)
         .environment(languageManager)
+        .environment(freeUsageManager)
+        .environment(\.locale, languageManager.locale)
+        // Force view recreation when language changes to update all localized strings
+        .id(languageManager.currentLanguage)
+    }
+}
+
+/// Splash screen shown while restoring session
+struct SplashView: View {
+    var body: some View {
+        ZStack {
+            Color(.systemBackground)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                Image(systemName: "cup.and.saucer.fill")
+                    .font(.system(size: 80))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color(red: 0.93, green: 0.26, blue: 0.55), Color(red: 0.8, green: 0.2, blue: 0.4)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                
+                Text(String(localized: "app_name"))
+                    .font(.title)
+                    .fontWeight(.bold)
+                
+                ProgressView()
+                    .padding(.top, 10)
+            }
+        }
     }
 }

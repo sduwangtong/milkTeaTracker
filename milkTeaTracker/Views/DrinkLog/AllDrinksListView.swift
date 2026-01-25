@@ -60,13 +60,13 @@ struct AllDrinksListView: View {
                                         Button(role: .destructive) {
                                             deleteDrinkLog(log)
                                         } label: {
-                                            Label("Delete", systemImage: "trash")
+                                            Label(String(localized: "delete"), systemImage: "trash")
                                         }
                                         
                                         Button {
                                             selectedDrinkLog = log
                                         } label: {
-                                            Label("Edit", systemImage: "pencil")
+                                            Label(String(localized: "edit"), systemImage: "pencil")
                                         }
                                         .tint(.blue)
                                     }

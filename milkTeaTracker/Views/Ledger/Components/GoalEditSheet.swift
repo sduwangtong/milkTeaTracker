@@ -13,6 +13,7 @@ struct GoalEditSheet: View {
     let onSave: (Int) -> Void
     
     @Environment(\.dismiss) private var dismiss
+    @Environment(LanguageManager.self) private var languageManager
     @State private var goalText: String = ""
     @FocusState private var isFocused: Bool
     
@@ -20,7 +21,7 @@ struct GoalEditSheet: View {
         NavigationStack {
             VStack(spacing: 24) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(unit == "cups" ? String(localized: "enter_cup_goal") : String(localized: "enter_calorie_goal"))
+                    Text(languageManager.localizedString(unit == "cups" ? "enter_cup_goal" : "enter_calorie_goal"))
                         .font(.system(size: 16, weight: .semibold))
                     
                     TextField("0", text: $goalText)
@@ -33,7 +34,7 @@ struct GoalEditSheet: View {
                 Spacer()
                 
                 Button(action: saveGoal) {
-                    Text(String(localized: "save"))
+                    Text(languageManager.localizedString("save"))
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -44,11 +45,11 @@ struct GoalEditSheet: View {
                 .disabled(goalText.isEmpty)
             }
             .padding()
-            .navigationTitle(String(localized: "edit_goal"))
+            .navigationTitle(languageManager.localizedString("edit_goal"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button(languageManager.localizedString("cancel")) {
                         dismiss()
                     }
                 }

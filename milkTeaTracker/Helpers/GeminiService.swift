@@ -97,7 +97,9 @@ class GeminiService {
     
     /// The prompt for extracting receipt information (optimized for ~30% token savings)
     private static let extractionPrompt = """
-    Extract milk tea receipt data. Brand name is at TOP. Each item has: drink name, price (like $5.50), size, sugar, ice, bubble options.
+    Extract milk tea receipt data. Brand name is at TOP.
+
+    IMPORTANT: Only extract DRINKS (beverages), NOT add-ons/toppings. Add-ons like mochi, pudding, jelly, boba, coconut, aloe, grass jelly, red bean, etc. are NOT separate drinks - ignore them or include as part of the drink they modify.
 
     Return JSON only:
     {"brandName":"store","items":[{"drinkName":"name","price":5.50,"size":"medium","sugarLevel":"less","iceLevel":"less","bubbleLevel":"none"}],"totalPrice":5.50}
@@ -108,7 +110,7 @@ class GeminiService {
     - iceLevel: 去冰/hot→none, 少冰→less, 正常冰→regular, 多冰→extra (default:less)
     - bubbleLevel: 无珍珠→none, 珍珠/波霸→regular, 多珍珠→extra (default:none)
 
-    Extract ALL items with their prices. Return ONLY valid JSON.
+    Extract only DRINK items (tea, milk tea, latte, smoothie, juice, etc.). Skip standalone toppings/add-ons. Return ONLY valid JSON.
     """
     
     /// Process a receipt image and extract drink information using Gemini API

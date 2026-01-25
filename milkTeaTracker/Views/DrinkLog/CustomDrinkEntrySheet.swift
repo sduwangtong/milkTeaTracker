@@ -172,7 +172,7 @@ struct CustomDrinkEntrySheet: View {
                                 .textFieldStyle(.roundedBorder)
                                 .focused($focusedField, equals: .calorieOverride)
                             
-                            Button("Cancel") {
+                            Button(String(localized: "cancel")) {
                                 showOverride = false
                                 calorieOverride = ""
                             }
@@ -195,12 +195,12 @@ struct CustomDrinkEntrySheet: View {
                 HStack(spacing: 12) {
                     // Size Picker
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "size_label"))
+                        Text(languageManager.localizedString("size_label"))
                             .font(.system(size: 14, weight: .semibold))
                         
                         Picker("", selection: $selectedSize) {
                             ForEach(DrinkSize.allCases, id: \.self) { size in
-                                Text(size.localizedName).tag(size)
+                                Text(size.localizedName(using: languageManager)).tag(size)
                             }
                         }
                         .pickerStyle(.menu)
@@ -209,12 +209,12 @@ struct CustomDrinkEntrySheet: View {
                     
                     // Sugar Level Picker
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "sugar_label"))
+                        Text(languageManager.localizedString("sugar_label"))
                             .font(.system(size: 14, weight: .semibold))
                         
                         Picker("", selection: $selectedSugarLevel) {
                             ForEach(SugarLevel.allCases, id: \.self) { sugar in
-                                Text(sugar.localizedName).tag(sugar)
+                                Text(sugar.localizedName(using: languageManager)).tag(sugar)
                             }
                         }
                         .pickerStyle(.menu)
@@ -223,12 +223,12 @@ struct CustomDrinkEntrySheet: View {
                     
                     // Ice Level Picker
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "ice_label"))
+                        Text(languageManager.localizedString("ice_label"))
                             .font(.system(size: 14, weight: .semibold))
                         
                         Picker("", selection: $selectedIce) {
                             ForEach(IceLevel.allCases, id: \.self) { ice in
-                                Text(ice.localizedName).tag(ice)
+                                Text(ice.localizedName(using: languageManager)).tag(ice)
                             }
                         }
                         .pickerStyle(.menu)
@@ -238,12 +238,12 @@ struct CustomDrinkEntrySheet: View {
                 
                 // Bubble Level Picker
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(String(localized: "bubble_label"))
+                    Text(languageManager.localizedString("bubble_label"))
                         .font(.system(size: 14, weight: .semibold))
                     
                     Picker("", selection: $selectedBubble) {
                         ForEach(BubbleLevel.allCases, id: \.self) { bubble in
-                            Text(bubble.localizedName).tag(bubble)
+                            Text(bubble.localizedName(using: languageManager)).tag(bubble)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -270,7 +270,7 @@ struct CustomDrinkEntrySheet: View {
                 // Action Buttons
                 HStack(spacing: 12) {
                     Button(action: { dismiss() }) {
-                        Text("Cancel")
+                        Text(String(localized: "cancel"))
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
@@ -297,7 +297,7 @@ struct CustomDrinkEntrySheet: View {
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button("Done") {
+                    Button(String(localized: "done_button")) {
                         focusedField = nil
                     }
                 }
@@ -307,8 +307,9 @@ struct CustomDrinkEntrySheet: View {
                 let estimated = NutritionEstimator.estimate(from: drinkName)
                 baseEstimatedCalories = estimated.calories
                 
-                // If we have an initial receipt from Snap, process it
+                // If we have an initial receipt from Snap, set local state and process it
                 if let receipt = initialReceipt {
+                    parsedReceipt = receipt
                     handleParsedReceipt(receipt)
                 }
             }
@@ -358,7 +359,7 @@ struct CustomDrinkEntrySheet: View {
                 showFilePicker = true
             }
             
-            Button("Cancel", role: .cancel) { }
+            Button(String(localized: "cancel"), role: .cancel) { }
         }
         .sheet(isPresented: $showReceiptScanner) {
             ReceiptScannerView(parsedReceipt: $parsedReceipt, isProcessing: $isProcessingReceipt)

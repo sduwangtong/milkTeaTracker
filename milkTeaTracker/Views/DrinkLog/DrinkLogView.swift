@@ -12,6 +12,7 @@ struct DrinkLogView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(LanguageManager.self) private var languageManager
     @Environment(AuthManager.self) private var authManager
+    @Environment(FreeUsageManager.self) private var freeUsageManager
     @State private var toastManager = ToastManager()
     
     @Query(sort: \Brand.name) private var allBrands: [Brand]
@@ -41,11 +42,21 @@ struct DrinkLogView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Subtitle
-                    Text(String(localized: "log_subtitle"))
+                    Text(languageManager.localizedString("log_subtitle"))
                         .font(.system(size: 15))
                         .foregroundStyle(.secondary)
                         .padding(.horizontal)
                         .padding(.top, 8)
+                    
+                    // Free scans remaining indicator
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 12))
+                        Text(languageManager.localizedString("free_scans_format", args: freeUsageManager.remainingScans, freeUsageManager.weeklyLimit))
+                            .font(.system(size: 13, weight: .medium))
+                    }
+                    .foregroundStyle(freeUsageManager.canScan ? Color(red: 0.2, green: 0.6, blue: 0.86) : .red)
+                    .padding(.horizontal)
                     
                     // Search Bar (hidden with popular brands)
                     if FeatureFlags.showPopularBrands {
@@ -53,7 +64,7 @@ struct DrinkLogView: View {
                             Image(systemName: "magnifyingglass")
                                 .foregroundStyle(.secondary)
                             
-                            TextField(String(localized: "search_placeholder"), text: $searchText)
+                            TextField(languageManager.localizedString("search_placeholder"), text: $searchText)
                                 .textFieldStyle(.plain)
                         }
                         .padding(12)
@@ -71,7 +82,7 @@ struct DrinkLogView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.system(size: 24))
-                                Text(String(localized: "custom_drink_button"))
+                                Text(languageManager.localizedString("custom_drink_button"))
                                     .font(.system(size: 16, weight: .bold))
                             }
                             .foregroundStyle(.white)
@@ -81,23 +92,23 @@ struct DrinkLogView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                         
-                        // Snap Button - direct camera access
+                        // Snap Button - direct camera access (disabled when no free scans left)
                         Button(action: {
                             showingSnapCamera = true
                         }) {
                             VStack(spacing: 4) {
                                 Image(systemName: "camera.fill")
                                     .font(.system(size: 24))
-                                Text(String(localized: "snap_button"))
+                                Text(languageManager.localizedString("snap_button"))
                                     .font(.system(size: 12, weight: .semibold))
                             }
-                            .foregroundStyle(.white)
+                            .foregroundStyle(freeUsageManager.canScan ? .white : .gray)
                             .frame(width: 70)
                             .padding(.vertical, 12)
-                            .background(Color(red: 0.2, green: 0.6, blue: 0.86))
+                            .background(freeUsageManager.canScan ? Color(red: 0.2, green: 0.6, blue: 0.86) : Color.gray.opacity(0.3))
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
-                        .disabled(isProcessingSnap)
+                        .disabled(!freeUsageManager.canScan || isProcessingSnap)
                     }
                     .padding(.horizontal)
                     
@@ -110,7 +121,7 @@ struct DrinkLogView: View {
                     // Popular Brands Section
                     if FeatureFlags.showPopularBrands {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(String(localized: "popular_brands"))
+                            Text(languageManager.localizedString("popular_brands"))
                                 .font(.system(size: 17, weight: .semibold))
                                 .padding(.horizontal)
                             
@@ -133,12 +144,12 @@ struct DrinkLogView: View {
                     if !recentDrinks.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                Text(String(localized: "recent_drinks"))
+                                Text(languageManager.localizedString("recent_drinks"))
                                     .font(.system(size: 17, weight: .semibold))
                                 
                                 Spacer()
                                 
-                                Button(String(localized: "view_all")) {
+                                Button(languageManager.localizedString("view_all")) {
                                     showingAllDrinks = true
                                 }
                                 .font(.system(size: 14))
@@ -157,13 +168,13 @@ struct DrinkLogView: View {
                                         Button(role: .destructive) {
                                             deleteDrinkLog(log)
                                         } label: {
-                                            Label("Delete", systemImage: "trash")
+                                            Label(languageManager.localizedString("delete"), systemImage: "trash")
                                         }
                                         
                                         Button {
                                             selectedDrinkLog = log
                                         } label: {
-                                            Label("Edit", systemImage: "pencil")
+                                            Label(languageManager.localizedString("edit"), systemImage: "pencil")
                                         }
                                         .tint(.blue)
                                     }
@@ -176,7 +187,7 @@ struct DrinkLogView: View {
                 }
                 .padding(.bottom, 20)
             }
-            .navigationTitle(String(localized: "drink_log"))
+            .navigationTitle(languageManager.localizedString("drink_log"))
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
@@ -235,7 +246,7 @@ struct DrinkLogView: View {
                                     .offset(x: 30, y: -25)
                             }
                             
-                            Text(String(localized: "snap_processing"))
+                            Text(languageManager.localizedString("snap_processing"))
                                 .font(.headline)
                                 .foregroundStyle(.white)
                             
@@ -299,7 +310,7 @@ struct DrinkLogView: View {
             }
         }
         
-        toastManager.show(String(localized: "logged_toast"))
+        toastManager.show(languageManager.localizedString("logged_toast"))
     }
     
     private func deleteDrinkLog(_ log: DrinkLog) {
@@ -312,4 +323,5 @@ struct DrinkLogView: View {
     DrinkLogView()
         .modelContainer(for: [Brand.self, DrinkTemplate.self, DrinkLog.self])
         .environment(LanguageManager.shared)
+        .environment(FreeUsageManager.shared)
 }

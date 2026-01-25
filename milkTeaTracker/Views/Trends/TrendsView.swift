@@ -81,14 +81,10 @@ struct TrendsView: View {
         goals.first
     }
     
+    /// Cup goal - only shown when viewing weekly (goal is always weekly)
     private var cupGoal: Int? {
-        guard let goals = userGoals else { return nil }
-        return selectedPeriod == .weekly ? goals.weeklyCupGoal : goals.monthlyCupGoal
-    }
-    
-    private var calorieGoal: Double? {
-        guard let goals = userGoals else { return nil }
-        return selectedPeriod == .weekly ? goals.weeklyCalorieGoal : goals.monthlyCalorieGoal
+        guard selectedPeriod == .weekly else { return nil }
+        return userGoals?.weeklyCupGoal
     }
     
     var body: some View {
@@ -105,8 +101,7 @@ struct TrendsView: View {
                     
                     TrendSummaryCard(
                         summary: trendSummary,
-                        cupGoal: cupGoal,
-                        calorieGoal: calorieGoal
+                        cupGoal: cupGoal
                     )
                     .padding(.horizontal)
                     
@@ -144,8 +139,7 @@ struct TrendsView: View {
         guard let image = ShareImageGenerator.generateImage(
             from: trendSummary,
             languageManager: languageManager,
-            cupGoal: cupGoal,
-            calorieGoal: calorieGoal
+            cupGoal: cupGoal
         ) else {
             errorMessage = String(localized: "share_error_message")
             showError = true

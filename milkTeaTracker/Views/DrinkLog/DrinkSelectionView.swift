@@ -75,7 +75,7 @@ struct DrinkSelectionView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(String(localized: "done_button")) {
                         dismiss()
                     }
                 }

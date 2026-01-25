@@ -10,17 +10,11 @@ import SwiftUI
 struct TrendSummaryCard: View {
     let summary: TrendSummary
     let cupGoal: Int?
-    let calorieGoal: Double?
     @Environment(LanguageManager.self) private var languageManager
     
     private var cupGoalStatus: String? {
         guard let goal = cupGoal else { return nil }
         return summary.totalCups <= goal ? "🎉" : "🚨"
-    }
-    
-    private var calorieGoalStatus: String? {
-        guard let goal = calorieGoal else { return nil }
-        return summary.totalCalories <= goal ? "🎉" : "🚨"
     }
     
     var body: some View {
@@ -56,20 +50,13 @@ struct TrendSummaryCard: View {
             
             // Two-column stats
             HStack(spacing: 40) {
-                // Total Calories with goal status
+                // Total Calories
                 VStack(spacing: 4) {
-                    HStack(spacing: 4) {
-                        Text("\(Int(summary.totalCalories))")
-                            .font(.system(size: 28, weight: .semibold))
-                            .foregroundStyle(.white)
-                        
-                        if let status = calorieGoalStatus {
-                            Text(status)
-                                .font(.system(size: 20))
-                        }
-                    }
+                    Text("\(Int(summary.totalCalories))")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundStyle(.white)
                     
-                    Text("Total Calories(kcal)")
+                    Text(String(localized: "total_calories_kcal"))
                         .font(.system(size: 12))
                         .foregroundStyle(.white.opacity(0.8))
                 }
@@ -80,7 +67,7 @@ struct TrendSummaryCard: View {
                         .font(.system(size: 28, weight: .semibold))
                         .foregroundStyle(.white)
                     
-                    Text("Total Sugar")
+                    Text(String(localized: "total_sugar"))
                         .font(.system(size: 12))
                         .foregroundStyle(.white.opacity(0.8))
                 }
@@ -137,8 +124,7 @@ struct TrendSummaryCard: View {
             totalSpend: 288,
             favoriteBrand: ("HeyTea", "喜茶", "🍵", 8)
         ),
-        cupGoal: 20,
-        calorieGoal: 6000
+        cupGoal: 20
     )
     .environment(LanguageManager.shared)
     .padding()

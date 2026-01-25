@@ -27,6 +27,18 @@ enum DrinkSize: String, Codable, CaseIterable {
         case .large: return String(localized: "size_large")
         }
     }
+    
+    var localizationKey: String {
+        switch self {
+        case .small: return "size_small"
+        case .medium: return "size_medium"
+        case .large: return "size_large"
+        }
+    }
+    
+    func localizedName(using manager: LanguageManager) -> String {
+        manager.localizedString(localizationKey)
+    }
 }
 
 enum SugarLevel: String, Codable, CaseIterable {
@@ -55,6 +67,20 @@ enum SugarLevel: String, Codable, CaseIterable {
         case .extra: return String(localized: "sugar_extra")
         }
     }
+    
+    var localizationKey: String {
+        switch self {
+        case .none: return "sugar_none"
+        case .light: return "sugar_light"
+        case .less: return "sugar_less"
+        case .regular: return "sugar_regular"
+        case .extra: return "sugar_extra"
+        }
+    }
+    
+    func localizedName(using manager: LanguageManager) -> String {
+        manager.localizedString(localizationKey)
+    }
 }
 
 enum IceLevel: String, Codable, CaseIterable {
@@ -70,6 +96,19 @@ enum IceLevel: String, Codable, CaseIterable {
         case .regular: return String(localized: "ice_regular")
         case .extra: return String(localized: "ice_extra")
         }
+    }
+    
+    var localizationKey: String {
+        switch self {
+        case .none: return "ice_none"
+        case .less: return "ice_less"
+        case .regular: return "ice_regular"
+        case .extra: return "ice_extra"
+        }
+    }
+    
+    func localizedName(using manager: LanguageManager) -> String {
+        manager.localizedString(localizationKey)
     }
 }
 
@@ -94,5 +133,17 @@ enum BubbleLevel: String, Codable, CaseIterable {
         case .regular: return String(localized: "bubble_regular")
         case .extra: return String(localized: "bubble_extra")
         }
+    }
+    
+    var localizationKey: String {
+        switch self {
+        case .none: return "bubble_none"
+        case .regular: return "bubble_regular"
+        case .extra: return "bubble_extra"
+        }
+    }
+    
+    func localizedName(using manager: LanguageManager) -> String {
+        manager.localizedString(localizationKey)
     }
 }

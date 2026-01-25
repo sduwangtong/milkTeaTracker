@@ -203,4 +203,68 @@ extension Array where Element == DrinkLog {
         }
         .sorted { $0.cupCount > $1.cupCount }
     }
+    
+    /// Get cup counts for the last N weeks (including current week)
+    /// Returns array from oldest to newest: [4 weeks ago, 3 weeks ago, 2 weeks ago, last week/current]
+    func lastNWeeksCupCounts(_ n: Int = 4, referenceDate: Date = Date()) -> [PeriodCupCount] {
+        let calendar = Calendar.current
+        var results: [PeriodCupCount] = []
+        
+        for i in (0..<n).reversed() {
+            let weekDate = calendar.date(byAdding: .weekOfYear, value: -i, to: referenceDate)!
+            let weekStart = weekDate.startOfWeek()
+            let weekEnd = weekDate.endOfWeek()
+            let weekLogs = filter { $0.timestamp >= weekStart && $0.timestamp <= weekEnd }
+            
+            // Generate short label (W1, W2, etc. or week number)
+            let weekOfYear = calendar.component(.weekOfYear, from: weekDate)
+            let label = "W\(weekOfYear)"
+            
+            results.append(PeriodCupCount(
+                label: label,
+                cups: weekLogs.count,
+                periodStart: weekStart,
+                isCurrentPeriod: i == 0
+            ))
+        }
+        
+        return results
+    }
+    
+    /// Get cup counts for the last N months (including current month)
+    /// Returns array from oldest to newest
+    func lastNMonthsCupCounts(_ n: Int = 4, referenceDate: Date = Date()) -> [PeriodCupCount] {
+        let calendar = Calendar.current
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM"
+        
+        var results: [PeriodCupCount] = []
+        
+        for i in (0..<n).reversed() {
+            let monthDate = calendar.date(byAdding: .month, value: -i, to: referenceDate)!
+            let monthStart = monthDate.startOfMonth()
+            let monthEnd = monthDate.endOfMonth()
+            let monthLogs = filter { $0.timestamp >= monthStart && $0.timestamp <= monthEnd }
+            
+            let label = dateFormatter.string(from: monthDate)
+            
+            results.append(PeriodCupCount(
+                label: label,
+                cups: monthLogs.count,
+                periodStart: monthStart,
+                isCurrentPeriod: i == 0
+            ))
+        }
+        
+        return results
+    }
+}
+
+/// Represents cup count for a time period (used in trend mini-chart)
+struct PeriodCupCount: Identifiable {
+    let id = UUID()
+    let label: String
+    let cups: Int
+    let periodStart: Date
+    let isCurrentPeriod: Bool
 }

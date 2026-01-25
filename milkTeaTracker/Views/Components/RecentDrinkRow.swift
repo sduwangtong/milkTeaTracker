@@ -33,9 +33,9 @@ struct RecentDrinkRow: View {
                 HStack(spacing: 4) {
                     Text(languageManager.isEnglish ? drinkLog.brandName : drinkLog.brandNameZH)
                     Text("·")
-                    Text(drinkLog.size.localizedName)
+                    Text(drinkLog.size.localizedName(using: languageManager))
                     Text("·")
-                    Text(drinkLog.sugarLevel.localizedName)
+                    Text(drinkLog.sugarLevel.localizedName(using: languageManager))
                 }
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
@@ -45,7 +45,7 @@ struct RecentDrinkRow: View {
             
             // Right: Calories and quick log button
             VStack(alignment: .trailing, spacing: 4) {
-                Text("\(Int(drinkLog.calories))\(String(localized: "kcal_unit"))")
+                Text("\(Int(drinkLog.calories))\(languageManager.localizedString("kcal_unit"))")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(Color(red: 0.93, green: 0.26, blue: 0.55))
                 

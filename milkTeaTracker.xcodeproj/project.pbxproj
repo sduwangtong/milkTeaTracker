@@ -286,6 +286,7 @@
 				GEMINI_API_KEY = "AIzaSyB8RN6LvqSCFdeqmwbZ5hKZ3YMpOc1SSCxC-NgGZ2MuGADXesw";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = milkTeaTracker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Boba Diary";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan receipts to automatically extract drink information like price, sugar level, and ice level.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save your milk tea consumption trends as an image to your Photos library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Select receipt images from your photo library to extract drink information.";
@@ -336,6 +337,7 @@
 				GEMINI_API_KEY = "AIzaSyB8RN6LvqSCFdeqmwbZ5hKZ3YMpOc1SSCxC-NgGZ2MuGADXesw";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = milkTeaTracker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Boba Diary";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan receipts to automatically extract drink information like price, sugar level, and ice level.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save your milk tea consumption trends as an image to your Photos library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Select receipt images from your photo library to extract drink information.";

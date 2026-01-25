@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @Environment(AuthManager.self) private var authManager
+    @Environment(LanguageManager.self) private var languageManager
     
     var body: some View {
         NavigationStack {
@@ -73,24 +74,24 @@ struct ProfileView: View {
                     } label: {
                         HStack {
                             Image(systemName: "rectangle.portrait.and.arrow.right")
-                            Text("Sign Out")
+                            Text(languageManager.localizedString("sign_out"))
                         }
                     }
                 } footer: {
-                    Text("Signing out will return you to the login screen.")
+                    Text(languageManager.localizedString("sign_out_footer"))
                 }
                 
                 // App Info Section
-                Section("About") {
+                Section(languageManager.localizedString("about")) {
                     HStack {
-                        Text("Version")
+                        Text(languageManager.localizedString("version"))
                         Spacer()
                         Text("1.0.0")
                             .foregroundStyle(.secondary)
                     }
                 }
             }
-            .navigationTitle("Profile")
+            .navigationTitle(languageManager.localizedString("profile"))
         }
     }
 }
@@ -98,4 +99,5 @@ struct ProfileView: View {
 #Preview {
     ProfileView()
         .environment(AuthManager())
+        .environment(LanguageManager.shared)
 }

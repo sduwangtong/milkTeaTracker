@@ -8,77 +8,45 @@
 import SwiftUI
 import SwiftData
 
-struct MonthlyGoalsSection: View {
-    let summary: MonthlySummary
+struct GoalSection: View {
+    let currentCups: Int
     @Bindable var goals: UserGoals
-    let period: TimePeriod
     @Environment(\.modelContext) private var modelContext
+    @Environment(LanguageManager.self) private var languageManager
     
     @State private var editingCupGoal = false
-    @State private var editingCalorieGoal = false
-    
-    private var goalTitle: String {
-        period == .weekly ? String(localized: "weekly_goals") : String(localized: "monthly_goals")
-    }
-    
-    private var cupGoal: Int? {
-        period == .weekly ? goals.weeklyCupGoal : goals.monthlyCupGoal
-    }
-    
-    private var calorieGoal: Double? {
-        period == .weekly ? goals.weeklyCalorieGoal : goals.monthlyCalorieGoal
-    }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header - always weekly
+            HStack(spacing: 6) {
                 Image(systemName: "target")
                     .foregroundStyle(.secondary)
-                Text(goalTitle)
-                    .font(.system(size: 18, weight: .semibold))
+                Text(languageManager.localizedString("weekly_goal"))
+                    .font(.system(size: 16, weight: .medium))
             }
             
-            VStack(spacing: 24) {
-                GoalProgressRow(
-                    title: "total_cups",
-                    current: summary.totalCups,
-                    goal: cupGoal,
-                    unit: "cups",
-                    color: .green,
-                    isEditing: $editingCupGoal,
-                    onSave: { newGoal in
-                        if period == .weekly {
-                            goals.weeklyCupGoal = newGoal
-                        } else {
-                            goals.monthlyCupGoal = newGoal
-                        }
-                        goals.lastUpdated = Date()
-                        try? modelContext.save()
-                    }
-                )
-                
-                GoalProgressRow(
-                    title: "total_calories",
-                    current: Int(summary.totalCalories),
-                    goal: calorieGoal.map(Int.init),
-                    unit: "kcal",
-                    color: .blue,
-                    isEditing: $editingCalorieGoal,
-                    onSave: { newGoal in
-                        if period == .weekly {
-                            goals.weeklyCalorieGoal = Double(newGoal)
-                        } else {
-                            goals.monthlyCalorieGoal = Double(newGoal)
-                        }
-                        goals.lastUpdated = Date()
-                        try? modelContext.save()
-                    }
-                )
-            }
-            .padding()
-            .background(Color(.systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
+            // Goal progress
+            GoalProgressRow(
+                title: "cups_limit",
+                current: currentCups,
+                goal: goals.weeklyCupGoal,
+                unit: "cups",
+                color: .green,
+                isEditing: $editingCupGoal,
+                onSave: { newGoal in
+                    goals.weeklyCupGoal = newGoal
+                    goals.lastUpdated = Date()
+                    try? modelContext.save()
+                }
+            )
         }
+        .padding()
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
     }
 }
+
+// Keep old name for compatibility during transition
+typealias MonthlyGoalsSection = GoalSection
