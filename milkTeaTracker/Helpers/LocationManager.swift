@@ -126,7 +126,7 @@ extension LocationManager: CLLocationManagerDelegate {
     }
     
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("[LocationManager] Error: \(error.localizedDescription)")
+        debugLog("[LocationManager] Error: \(error.localizedDescription)")
         
         Task { @MainActor in
             self.locationContinuation?.resume(returning: nil)
@@ -135,7 +135,7 @@ extension LocationManager: CLLocationManagerDelegate {
     }
     
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        print("[LocationManager] Authorization changed: \(manager.authorizationStatus.rawValue)")
+        debugLog("[LocationManager] Authorization changed: \(manager.authorizationStatus.rawValue)")
     }
 }
 

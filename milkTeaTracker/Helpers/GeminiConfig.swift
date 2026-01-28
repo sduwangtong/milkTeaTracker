@@ -9,13 +9,15 @@ import Foundation
 
 /// Configuration for Gemini API access via Vertex AI
 enum GeminiConfig {
-    /// The Vertex AI API key
-    /// For production apps, consider using a more secure approach (backend proxy, etc.)
-    static let apiKey = "AQ.Ab8RN6LvqSCFdeqmwbZ5hKZ3YMpOc1SSCxC-NgGZ2MuGADXesw"
+    /// The Vertex AI access token
+    /// Retrieved securely from Info.plist (set via xcconfig files)
+    static var apiKey: String {
+        SecureConfig.geminiAPIKey
+    }
     
     /// Check if API key is configured
     static var isConfigured: Bool {
-        !apiKey.isEmpty
+        SecureConfig.isGeminiConfigured
     }
     
     /// Vertex AI endpoint for Gemini content generation

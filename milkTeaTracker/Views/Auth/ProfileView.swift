@@ -10,6 +10,12 @@ import SwiftUI
 struct ProfileView: View {
     @Environment(AuthManager.self) private var authManager
     @Environment(LanguageManager.self) private var languageManager
+    @Environment(LegalConsentManager.self) private var legalConsentManager
+    @Environment(\.modelContext) private var modelContext
+    
+    @State private var showTermsSheet = false
+    @State private var showDeleteAccountAlert = false
+    @State private var isDeletingAccount = false
     
     var body: some View {
         NavigationStack {
@@ -81,6 +87,52 @@ struct ProfileView: View {
                     Text(languageManager.localizedString("sign_out_footer"))
                 }
                 
+                // Danger Zone - Delete Account
+                Section {
+                    Button(role: .destructive) {
+                        showDeleteAccountAlert = true
+                    } label: {
+                        HStack {
+                            if isDeletingAccount {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "trash")
+                            }
+                            Text(String(localized: "delete_account"))
+                        }
+                    }
+                    .disabled(isDeletingAccount)
+                } header: {
+                    Text(String(localized: "danger_zone"))
+                } footer: {
+                    Text(String(localized: "delete_account_footer"))
+                }
+                
+                // Legal Section
+                Section {
+                    Button {
+                        showTermsSheet = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "doc.text")
+                            Text(String(localized: "terms_and_privacy"))
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                        }
+                        .foregroundStyle(.primary)
+                    }
+                } header: {
+                    Text(String(localized: "legal_section"))
+                } footer: {
+                    if let acceptedDate = legalConsentManager.termsAcceptedDate {
+                        Text(String(localized: "terms_accepted_on") + " " + acceptedDate.formatted(date: .abbreviated, time: .omitted))
+                    }
+                }
+                
                 // App Info Section
                 Section(languageManager.localizedString("about")) {
                     HStack {
@@ -92,6 +144,32 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle(languageManager.localizedString("profile"))
+            .sheet(isPresented: $showTermsSheet) {
+                TermsOfServiceView(isViewOnly: true)
+                    .environment(legalConsentManager)
+            }
+            .alert(String(localized: "delete_account_title"), isPresented: $showDeleteAccountAlert) {
+                Button(String(localized: "cancel"), role: .cancel) { }
+                Button(String(localized: "delete"), role: .destructive) {
+                    Task {
+                        await deleteAccount()
+                    }
+                }
+            } message: {
+                Text(String(localized: "delete_account_message"))
+            }
+        }
+    }
+    
+    private func deleteAccount() async {
+        isDeletingAccount = true
+        defer { isDeletingAccount = false }
+        
+        do {
+            try await authManager.deleteAccount(modelContext: modelContext)
+        } catch {
+            // Error handling - the user will be signed out regardless
+            debugLog("[ProfileView] Error deleting account: \(error)")
         }
     }
 }
@@ -100,4 +178,5 @@ struct ProfileView: View {
     ProfileView()
         .environment(AuthManager())
         .environment(LanguageManager.shared)
+        .environment(LegalConsentManager.shared)
 }

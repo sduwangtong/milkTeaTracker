@@ -22,9 +22,11 @@ struct BrandCard: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 56, height: 56)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .accessibilityHidden(true)
                 } else {
                     Text(brand.emoji)
                         .font(.system(size: 48))
+                        .accessibilityHidden(true)
                 }
                 
                 Text(languageManager.isEnglish ? brand.name : brand.nameZH)
@@ -39,6 +41,8 @@ struct BrandCard: View {
             .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(languageManager.isEnglish ? brand.name : brand.nameZH)
+        .accessibilityHint(languageManager.localizedString("select_brand_hint"))
     }
 }
 

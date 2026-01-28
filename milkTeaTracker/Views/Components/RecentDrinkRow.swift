@@ -56,9 +56,13 @@ struct RecentDrinkRow: View {
                         .frame(width: 24, height: 24)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(languageManager.localizedString("quick_log_button"))
+                .accessibilityHint(languageManager.localizedString("quick_log_hint"))
             }
         }
         .padding(.vertical, 8)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(languageManager.isEnglish ? drinkLog.drinkName : drinkLog.drinkNameZH), \(languageManager.isEnglish ? drinkLog.brandName : drinkLog.brandNameZH), \(Int(drinkLog.calories)) \(languageManager.localizedString("calories"))")
     }
 }
 

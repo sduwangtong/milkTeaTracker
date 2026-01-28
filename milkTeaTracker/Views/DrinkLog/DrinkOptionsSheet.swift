@@ -224,24 +224,29 @@ struct DrinkOptionsSheet: View {
         )
         
         modelContext.insert(drinkLog)
-        try? modelContext.save()
         
-        // Log to Google Sheets with location (fire-and-forget)
-        if let user = authManager.currentUser,
-           let email = user.email {
-            Task {
-                let location = await LocationManager.shared.getLocationForLogging()
-                await DrinkLoggerService.shared.logDrink(
-                    email: email,
-                    name: user.displayName ?? "Unknown",
-                    drink: drinkLog,
-                    location: location
-                )
+        do {
+            try modelContext.save()
+            toastManager.showSuccess(String(localized: "logged_toast"))
+            onSave()
+            
+            // Log to Google Sheets with location (fire-and-forget)
+            if let user = authManager.currentUser,
+               let email = user.email {
+                Task {
+                    let location = await LocationManager.shared.getLocationForLogging()
+                    await DrinkLoggerService.shared.logDrink(
+                        email: email,
+                        name: user.displayName ?? "Unknown",
+                        drink: drinkLog,
+                        location: location
+                    )
+                }
             }
+        } catch {
+            debugLog("[DrinkOptionsSheet] Failed to save: \(error)")
+            toastManager.showError(String(localized: "save_error"))
         }
-        
-        toastManager.show(String(localized: "logged_toast"))
-        onSave()
     }
 }
 

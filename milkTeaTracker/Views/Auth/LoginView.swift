@@ -9,10 +9,12 @@ import SwiftUI
 
 struct LoginView: View {
     @Environment(AuthManager.self) private var authManager
+    @Environment(LegalConsentManager.self) private var legalConsentManager
     
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var showGuestLogin = false
+    @State private var showTermsSheet = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -80,20 +82,23 @@ struct LoginView: View {
                     
                     Spacer()
                     
-                    // Terms and Privacy
+                    // Terms and Privacy - clickable to show popup
                     VStack(spacing: 4) {
-                        Text(String(localized: "legal_agreement"))
-                            .font(.caption2)
+                        Text(String(localized: "login_terms_agreement"))
+                            .font(.caption)
                             .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
                         
-                        HStack(spacing: 4) {
-                            Link(String(localized: "terms_of_service"), destination: URL(string: "https://example.com/terms")!)
-                            Text(String(localized: "and"))
-                            Link(String(localized: "privacy_policy"), destination: URL(string: "https://example.com/privacy")!)
+                        Button {
+                            showTermsSheet = true
+                        } label: {
+                            Text(String(localized: "terms_and_privacy"))
+                                .font(.caption)
+                                .foregroundStyle(Color(red: 0.93, green: 0.26, blue: 0.55))
+                                .underline()
                         }
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
                     }
+                    .padding(.horizontal, 32)
                     .padding(.bottom, 16)
                 }
                 .frame(minHeight: geometry.size.height)
@@ -108,6 +113,10 @@ struct LoginView: View {
         .sheet(isPresented: $showGuestLogin) {
             GuestLoginSheet()
                 .environment(authManager)
+        }
+        .sheet(isPresented: $showTermsSheet) {
+            TermsOfServiceView(isViewOnly: true)
+                .environment(legalConsentManager)
         }
     }
     
@@ -147,6 +156,7 @@ struct SocialLoginButton: View {
             HStack(spacing: 12) {
                 Image(systemName: icon)
                     .font(.title2)
+                    .accessibilityHidden(true)
                 
                 Text(title)
                     .fontWeight(.medium)
@@ -163,10 +173,12 @@ struct SocialLoginButton: View {
                     .stroke(borderColor ?? .clear, lineWidth: 1)
             )
         }
+        .accessibilityLabel(title)
     }
 }
 
 #Preview {
     LoginView()
         .environment(AuthManager())
+        .environment(LegalConsentManager.shared)
 }

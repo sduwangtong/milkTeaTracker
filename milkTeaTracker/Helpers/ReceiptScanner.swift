@@ -80,7 +80,7 @@ class ReceiptProcessingService {
         if GeminiConfig.isConfigured {
             do {
                 let receipt = try await GeminiService.processReceiptImage(image)
-                print("Receipt processed successfully with Gemini API")
+                debugLog("Receipt processed successfully with Gemini API")
                 
                 // Decrement free scan count after successful Gemini API usage
                 await MainActor.run {
@@ -89,11 +89,11 @@ class ReceiptProcessingService {
                 
                 return ReceiptProcessingResult(receipt: receipt, usedFallback: false, error: nil)
             } catch {
-                print("Gemini API failed: \(error.localizedDescription), falling back to OCR")
+                debugLog("Gemini API failed: \(error.localizedDescription), falling back to OCR")
                 // Fall through to OCR fallback
             }
         } else {
-            print("Gemini API not configured, using OCR fallback")
+            debugLog("Gemini API not configured, using OCR fallback")
         }
         
         // Fallback to Vision OCR (free - doesn't count against limit)
@@ -121,7 +121,7 @@ class ReceiptOCRService {
         return await withCheckedContinuation { continuation in
             let request = VNRecognizeTextRequest { request, error in
                 if let error = error {
-                    print("OCR error: \(error.localizedDescription)")
+                    debugLog("OCR error: \(error.localizedDescription)")
                     continuation.resume(returning: "")
                     return
                 }
@@ -156,7 +156,7 @@ class ReceiptOCRService {
             do {
                 try handler.perform([request])
             } catch {
-                print("Failed to perform OCR: \(error.localizedDescription)")
+                debugLog("Failed to perform OCR: \(error.localizedDescription)")
                 continuation.resume(returning: "")
             }
         }
@@ -268,7 +268,7 @@ struct ReceiptPhotoPickerView: UIViewControllerRepresentable {
                 guard let self = self else { return }
                 
                 if let error = error {
-                    print("Failed to load image: \(error.localizedDescription)")
+                    debugLog("Failed to load image: \(error.localizedDescription)")
                     Task { @MainActor in
                         self.parent.isProcessing = false
                     }
@@ -337,7 +337,7 @@ struct ReceiptFilePickerView: UIViewControllerRepresentable {
             
             // Start accessing security-scoped resource
             guard url.startAccessingSecurityScopedResource() else {
-                print("Failed to access security-scoped resource")
+                debugLog("Failed to access security-scoped resource")
                 parent.isProcessing = false
                 return
             }
@@ -349,7 +349,7 @@ struct ReceiptFilePickerView: UIViewControllerRepresentable {
             // Load image from URL
             guard let imageData = try? Data(contentsOf: url),
                   let image = UIImage(data: imageData) else {
-                print("Failed to load image from file")
+                debugLog("Failed to load image from file")
                 Task { @MainActor in
                     self.parent.isProcessing = false
                 }

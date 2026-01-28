@@ -157,6 +157,8 @@
 /* Begin XCBuildConfiguration section */
 		F78F46402F15A5620012F87E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = F78F46392F15A5610012F87E /* milkTeaTracker */;
+			baseConfigurationReferenceRelativePath = Secrets.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -219,6 +221,8 @@
 		};
 		F78F46412F15A5620012F87E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = F78F46392F15A5610012F87E /* milkTeaTracker */;
+			baseConfigurationReferenceRelativePath = Secrets.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -273,6 +277,8 @@
 		};
 		F78F46432F15A5620012F87E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = F78F46392F15A5610012F87E /* milkTeaTracker */;
+			baseConfigurationReferenceRelativePath = Secrets.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -283,7 +289,6 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
-				GEMINI_API_KEY = "AIzaSyB8RN6LvqSCFdeqmwbZ5hKZ3YMpOc1SSCxC-NgGZ2MuGADXesw";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = milkTeaTracker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Boba Diary";
@@ -324,6 +329,8 @@
 		};
 		F78F46442F15A5620012F87E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = F78F46392F15A5610012F87E /* milkTeaTracker */;
+			baseConfigurationReferenceRelativePath = Secrets.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -334,7 +341,6 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
-				GEMINI_API_KEY = "AIzaSyB8RN6LvqSCFdeqmwbZ5hKZ3YMpOc1SSCxC-NgGZ2MuGADXesw";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = milkTeaTracker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Boba Diary";

@@ -70,7 +70,7 @@ class GeminiService {
         
         // Check if resizing is needed
         guard size.width > maxDimension || size.height > maxDimension else {
-            print("[Gemini] Image already within size limits, no resize needed")
+            debugLog("[Gemini] Image already within size limits, no resize needed")
             return image
         }
         
@@ -118,35 +118,35 @@ class GeminiService {
     /// - Returns: A ParsedReceipt with extracted information
     /// - Throws: GeminiError if processing fails
     static func processReceiptImage(_ image: UIImage) async throws -> ParsedReceipt {
-        print("[Gemini] ========== Starting Receipt Processing ==========")
+        debugLog("[Gemini] ========== Starting Receipt Processing ==========")
         
         // Check if API key is configured
         guard GeminiConfig.isConfigured else {
-            print("[Gemini] ERROR: API key not configured")
+            debugLog("[Gemini] ERROR: API key not configured")
             throw GeminiError.apiKeyNotConfigured
         }
         
         // Log original image info
         let originalSize = image.size
         let originalPixels = Int(originalSize.width * originalSize.height)
-        print("[Gemini] ORIGINAL IMAGE:")
-        print("[Gemini]   Dimensions: \(Int(originalSize.width))x\(Int(originalSize.height)) pixels")
-        print("[Gemini]   Total pixels: \(originalPixels) (\(String(format: "%.1f", Double(originalPixels) / 1_000_000)) MP)")
+        debugLog("[Gemini] ORIGINAL IMAGE:")
+        debugLog("[Gemini]   Dimensions: \(Int(originalSize.width))x\(Int(originalSize.height)) pixels")
+        debugLog("[Gemini]   Total pixels: \(originalPixels) (\(String(format: "%.1f", Double(originalPixels) / 1_000_000)) MP)")
         
         // Compress and resize image
-        print("[Gemini] COMPRESSING IMAGE (max dimension: \(Int(maxImageDimension))px)...")
+        debugLog("[Gemini] COMPRESSING IMAGE (max dimension: \(Int(maxImageDimension))px)...")
         let compressedImage = compressImage(image, maxDimension: maxImageDimension)
         let compressedSize = compressedImage.size
         let compressedPixels = Int(compressedSize.width * compressedSize.height)
         
-        print("[Gemini] COMPRESSED IMAGE:")
-        print("[Gemini]   Dimensions: \(Int(compressedSize.width))x\(Int(compressedSize.height)) pixels")
-        print("[Gemini]   Total pixels: \(compressedPixels) (\(String(format: "%.1f", Double(compressedPixels) / 1_000_000)) MP)")
-        print("[Gemini]   Pixel reduction: \(String(format: "%.1f", (1 - Double(compressedPixels) / Double(originalPixels)) * 100))%")
+        debugLog("[Gemini] COMPRESSED IMAGE:")
+        debugLog("[Gemini]   Dimensions: \(Int(compressedSize.width))x\(Int(compressedSize.height)) pixels")
+        debugLog("[Gemini]   Total pixels: \(compressedPixels) (\(String(format: "%.1f", Double(compressedPixels) / 1_000_000)) MP)")
+        debugLog("[Gemini]   Pixel reduction: \(String(format: "%.1f", (1 - Double(compressedPixels) / Double(originalPixels)) * 100))%")
         
         // Convert compressed image to JPEG
         guard let imageData = compressedImage.jpegData(compressionQuality: jpegQuality) else {
-            print("[Gemini] ERROR: Failed to convert image to JPEG")
+            debugLog("[Gemini] ERROR: Failed to convert image to JPEG")
             throw GeminiError.invalidImage
         }
         let base64Image = imageData.base64EncodedString()
@@ -154,39 +154,39 @@ class GeminiService {
         // Log final data sizes
         let dataSizeKB = imageData.count / 1024
         let base64SizeKB = base64Image.count / 1024
-        print("[Gemini] FINAL DATA:")
-        print("[Gemini]   JPEG size: \(dataSizeKB) KB (\(String(format: "%.2f", Double(imageData.count) / 1_000_000)) MB)")
-        print("[Gemini]   Base64 size: \(base64SizeKB) KB (\(base64Image.count) characters)")
-        print("[Gemini]   Prompt size: \(extractionPrompt.count) characters")
+        debugLog("[Gemini] FINAL DATA:")
+        debugLog("[Gemini]   JPEG size: \(dataSizeKB) KB (\(String(format: "%.2f", Double(imageData.count) / 1_000_000)) MB)")
+        debugLog("[Gemini]   Base64 size: \(base64SizeKB) KB (\(base64Image.count) characters)")
+        debugLog("[Gemini]   Prompt size: \(extractionPrompt.count) characters")
         
         // Build the request
         let requestBody = buildRequestBody(base64Image: base64Image)
         
         // Make the API call
-        print("[Gemini] Sending request to Gemini API...")
+        debugLog("[Gemini] Sending request to Gemini API...")
         let response = try await makeAPICall(requestBody: requestBody)
         
         // Log raw response
-        print("[Gemini] OUTPUT (raw response):")
-        print("[Gemini] \(response)")
+        debugLog("[Gemini] OUTPUT (raw response):")
+        debugLog("[Gemini] \(response)")
         
         // Parse the response into ParsedReceipt
         let parsedReceipt = try parseResponse(response)
         
         // Log parsed result
-        print("[Gemini] OUTPUT (parsed):")
-        print("[Gemini]   Brand: \(parsedReceipt.brandName ?? "nil")")
-        print("[Gemini]   Items count: \(parsedReceipt.items.count)")
+        debugLog("[Gemini] OUTPUT (parsed):")
+        debugLog("[Gemini]   Brand: \(parsedReceipt.brandName ?? "nil")")
+        debugLog("[Gemini]   Items count: \(parsedReceipt.items.count)")
         for (index, item) in parsedReceipt.items.enumerated() {
-            print("[Gemini]   Item \(index + 1): \(item.drinkName)")
-            print("[Gemini]     - Price: \(item.price.map { String(format: "$%.2f", $0) } ?? "nil")")
-            print("[Gemini]     - Size: \(item.size?.rawValue ?? "nil")")
-            print("[Gemini]     - Sugar: \(item.sugarLevel?.rawValue ?? "nil")")
-            print("[Gemini]     - Ice: \(item.iceLevel?.rawValue ?? "nil")")
-            print("[Gemini]     - Bubble: \(item.bubbleLevel?.rawValue ?? "nil")")
+            debugLog("[Gemini]   Item \(index + 1): \(item.drinkName)")
+            debugLog("[Gemini]     - Price: \(item.price.map { String(format: "$%.2f", $0) } ?? "nil")")
+            debugLog("[Gemini]     - Size: \(item.size?.rawValue ?? "nil")")
+            debugLog("[Gemini]     - Sugar: \(item.sugarLevel?.rawValue ?? "nil")")
+            debugLog("[Gemini]     - Ice: \(item.iceLevel?.rawValue ?? "nil")")
+            debugLog("[Gemini]     - Bubble: \(item.bubbleLevel?.rawValue ?? "nil")")
         }
-        print("[Gemini]   Total price: \(parsedReceipt.totalPrice.map { String(format: "$%.2f", $0) } ?? "nil")")
-        print("[Gemini] ========== Processing Complete ==========")
+        debugLog("[Gemini]   Total price: \(parsedReceipt.totalPrice.map { String(format: "$%.2f", $0) } ?? "nil")")
+        debugLog("[Gemini] ========== Processing Complete ==========")
         
         return parsedReceipt
     }
@@ -224,17 +224,17 @@ class GeminiService {
     private static func makeAPICall(requestBody: [String: Any]) async throws -> String {
         // Build URL with API key
         guard var urlComponents = URLComponents(string: GeminiConfig.endpoint) else {
-            print("[Gemini] ERROR: Invalid endpoint URL")
+            debugLog("[Gemini] ERROR: Invalid endpoint URL")
             throw GeminiError.invalidResponse
         }
         urlComponents.queryItems = [URLQueryItem(name: "key", value: GeminiConfig.apiKey)]
         
         guard let url = urlComponents.url else {
-            print("[Gemini] ERROR: Failed to build URL with API key")
+            debugLog("[Gemini] ERROR: Failed to build URL with API key")
             throw GeminiError.invalidResponse
         }
         
-        print("[Gemini] API Endpoint: \(GeminiConfig.endpoint)")
+        debugLog("[Gemini] API Endpoint: \(GeminiConfig.endpoint)")
         
         // Create request
         var request = URLRequest(url: url)
@@ -242,36 +242,36 @@ class GeminiService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
         
-        print("[Gemini] Request body size: \((request.httpBody?.count ?? 0) / 1024) KB")
+        debugLog("[Gemini] Request body size: \((request.httpBody?.count ?? 0) / 1024) KB")
         
         // Make the request
         let startTime = Date()
         let (data, response) = try await URLSession.shared.data(for: request)
         let elapsed = Date().timeIntervalSince(startTime)
         
-        print("[Gemini] Response received in \(String(format: "%.2f", elapsed)) seconds")
-        print("[Gemini] Response data size: \(data.count) bytes")
+        debugLog("[Gemini] Response received in \(String(format: "%.2f", elapsed)) seconds")
+        debugLog("[Gemini] Response data size: \(data.count) bytes")
         
         // Check response status
         guard let httpResponse = response as? HTTPURLResponse else {
-            print("[Gemini] ERROR: Invalid HTTP response")
+            debugLog("[Gemini] ERROR: Invalid HTTP response")
             throw GeminiError.invalidResponse
         }
         
-        print("[Gemini] HTTP Status: \(httpResponse.statusCode)")
+        debugLog("[Gemini] HTTP Status: \(httpResponse.statusCode)")
         
         if httpResponse.statusCode != 200 {
             // Try to extract error message
             if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let error = errorJson["error"] as? [String: Any],
                let message = error["message"] as? String {
-                print("[Gemini] ERROR: API error - \(message)")
+                debugLog("[Gemini] ERROR: API error - \(message)")
                 throw GeminiError.apiError(message)
             }
-            print("[Gemini] ERROR: HTTP \(httpResponse.statusCode)")
+            debugLog("[Gemini] ERROR: HTTP \(httpResponse.statusCode)")
             // Log raw error response for debugging
             if let errorString = String(data: data, encoding: .utf8) {
-                print("[Gemini] Error response body: \(errorString)")
+                debugLog("[Gemini] Error response body: \(errorString)")
             }
             throw GeminiError.apiError("HTTP \(httpResponse.statusCode)")
         }
@@ -284,10 +284,10 @@ class GeminiService {
               let parts = content["parts"] as? [[String: Any]],
               let firstPart = parts.first,
               let text = firstPart["text"] as? String else {
-            print("[Gemini] ERROR: Failed to parse response structure")
+            debugLog("[Gemini] ERROR: Failed to parse response structure")
             // Log raw response for debugging
             if let rawString = String(data: data, encoding: .utf8) {
-                print("[Gemini] Raw response: \(rawString.prefix(500))...")
+                debugLog("[Gemini] Raw response: \(rawString.prefix(500))...")
             }
             throw GeminiError.invalidResponse
         }
@@ -297,17 +297,17 @@ class GeminiService {
     
     /// Parse the Gemini response text into a ParsedReceipt
     private static func parseResponse(_ responseText: String) throws -> ParsedReceipt {
-        print("[Gemini] Parsing response...")
+        debugLog("[Gemini] Parsing response...")
         
         // Clean up the response - remove markdown code blocks if present
         var cleanedText = responseText.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Remove ```json and ``` markers if present
         if cleanedText.hasPrefix("```json") {
-            print("[Gemini] Removing ```json markdown wrapper")
+            debugLog("[Gemini] Removing ```json markdown wrapper")
             cleanedText = String(cleanedText.dropFirst(7))
         } else if cleanedText.hasPrefix("```") {
-            print("[Gemini] Removing ``` markdown wrapper")
+            debugLog("[Gemini] Removing ``` markdown wrapper")
             cleanedText = String(cleanedText.dropFirst(3))
         }
         if cleanedText.hasSuffix("```") {
@@ -315,12 +315,12 @@ class GeminiService {
         }
         cleanedText = cleanedText.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        print("[Gemini] Cleaned JSON to parse:")
-        print("[Gemini] \(cleanedText)")
+        debugLog("[Gemini] Cleaned JSON to parse:")
+        debugLog("[Gemini] \(cleanedText)")
         
         // Parse JSON
         guard let jsonData = cleanedText.data(using: .utf8) else {
-            print("[Gemini] ERROR: Failed to convert cleaned text to UTF-8 data")
+            debugLog("[Gemini] ERROR: Failed to convert cleaned text to UTF-8 data")
             throw GeminiError.invalidResponse
         }
         
@@ -329,9 +329,9 @@ class GeminiService {
         
         do {
             geminiResponse = try decoder.decode(GeminiReceiptResponse.self, from: jsonData)
-            print("[Gemini] JSON decoded successfully")
+            debugLog("[Gemini] JSON decoded successfully")
         } catch {
-            print("[Gemini] ERROR: JSON decoding failed - \(error)")
+            debugLog("[Gemini] ERROR: JSON decoding failed - \(error)")
             throw GeminiError.decodingError(error)
         }
         

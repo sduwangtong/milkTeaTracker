@@ -18,6 +18,7 @@ struct CustomDrinkEntrySheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(LanguageManager.self) private var languageManager
     @Environment(AuthManager.self) private var authManager
+    @Environment(FreeUsageManager.self) private var freeUsageManager
     
     @Query(sort: \Brand.name) private var allBrands: [Brand]
     
@@ -63,27 +64,29 @@ struct CustomDrinkEntrySheet: View {
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                // Scan Receipt Button - shows action sheet with multiple source options
-                Button(action: { showReceiptSourceSheet = true }) {
-                    HStack {
-                        if isProcessingReceipt {
-                            ProgressView()
-                                .tint(.white)
-                                .padding(.trailing, 4)
-                        } else {
-                            Image(systemName: "sparkles")
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Scan Receipt Button - shows action sheet with multiple source options
+                    // Disabled when no free scans remaining or when processing
+                    Button(action: { showReceiptSourceSheet = true }) {
+                        HStack {
+                            if isProcessingReceipt {
+                                ProgressView()
+                                    .tint(.white)
+                                    .padding(.trailing, 4)
+                            } else {
+                                Image(systemName: "sparkles")
+                            }
+                            Text(String(localized: "scan_receipt"))
                         }
-                        Text(String(localized: "scan_receipt"))
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(freeUsageManager.canScan ? .white : .gray)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(freeUsageManager.canScan ? Color(red: 0.2, green: 0.6, blue: 0.86) : Color.gray.opacity(0.3))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color(red: 0.2, green: 0.6, blue: 0.86))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                }
-                .disabled(isProcessingReceipt)
+                    .disabled(isProcessingReceipt || !freeUsageManager.canScan)
                 
                 // Drink Name Input
                 VStack(alignment: .leading, spacing: 8) {
@@ -290,15 +293,20 @@ struct CustomDrinkEntrySheet: View {
                     }
                     .disabled(drinkName.isEmpty)
                 }
+                }
+                .padding()
             }
-            .padding()
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(String(localized: "custom_drink_title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button(String(localized: "done_button")) {
+                    Button {
                         focusedField = nil
+                    } label: {
+                        Text(String(localized: "done_button"))
+                            .fontWeight(.semibold)
                     }
                 }
             }
@@ -553,31 +561,38 @@ struct CustomDrinkEntrySheet: View {
         )
         
         modelContext.insert(drinkLog)
-        try? modelContext.save()
         
-        // Log to Google Sheets with location (fire-and-forget)
-        if let user = authManager.currentUser,
-           let email = user.email {
-            Task {
-                let location = await LocationManager.shared.getLocationForLogging()
-                await DrinkLoggerService.shared.logDrink(
-                    email: email,
-                    name: user.displayName ?? "Unknown",
-                    drink: drinkLog,
-                    location: location
-                )
+        do {
+            try modelContext.save()
+            toastManager.showSuccess(String(localized: "logged_toast"))
+            
+            // Log to Google Sheets with location (fire-and-forget)
+            if let user = authManager.currentUser,
+               let email = user.email {
+                Task {
+                    let location = await LocationManager.shared.getLocationForLogging()
+                    await DrinkLoggerService.shared.logDrink(
+                        email: email,
+                        name: user.displayName ?? "Unknown",
+                        drink: drinkLog,
+                        location: location
+                    )
+                }
             }
+            
+            onSave()
+            dismiss()
+        } catch {
+            debugLog("[CustomDrinkEntry] Failed to save: \(error)")
+            toastManager.showError(String(localized: "save_error"))
         }
-        
-        toastManager.show(String(localized: "logged_toast"))
-        
-        onSave()
-        dismiss()
     }
 }
 
 #Preview {
     CustomDrinkEntrySheet(toastManager: ToastManager(), onSave: {})
         .environment(LanguageManager.shared)
-        .modelContainer(for: [CustomDrinkTemplate.self, DrinkLog.self])
+        .environment(FreeUsageManager.shared)
+        .environment(AuthManager())
+        .modelContainer(for: [CustomDrinkTemplate.self, DrinkLog.self, Brand.self])
 }

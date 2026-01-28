@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import AppTrackingTransparency
 #if canImport(GoogleMobileAds)
 import GoogleMobileAds
 #endif
@@ -31,6 +32,9 @@ final class AdManager {
     /// Whether ad removal has been purchased
     private(set) var hasRemovedAds: Bool = false
     
+    /// Current tracking authorization status
+    private(set) var trackingAuthorizationStatus: ATTrackingManager.AuthorizationStatus = .notDetermined
+    
     // MARK: - Private Properties
     
     private let adRemovalKey = "com.milkTeaTracker.adRemovalPurchased"
@@ -39,11 +43,36 @@ final class AdManager {
     
     private init() {
         loadPurchaseStatus()
+        trackingAuthorizationStatus = ATTrackingManager.trackingAuthorizationStatus
     }
     
     // MARK: - Public Methods
     
+    /// Request App Tracking Transparency authorization
+    /// Should be called before initializing ads
+    func requestTrackingAuthorization() async -> ATTrackingManager.AuthorizationStatus {
+        // Check current status first
+        let currentStatus = ATTrackingManager.trackingAuthorizationStatus
+        
+        // Only request if not determined yet
+        if currentStatus == .notDetermined {
+            let status = await ATTrackingManager.requestTrackingAuthorization()
+            trackingAuthorizationStatus = status
+            #if DEBUG
+            print("[AdManager] ATT authorization status: \(status.rawValue)")
+            #endif
+            return status
+        }
+        
+        trackingAuthorizationStatus = currentStatus
+        #if DEBUG
+        print("[AdManager] ATT already determined: \(currentStatus.rawValue)")
+        #endif
+        return currentStatus
+    }
+    
     /// Initialize the Google Mobile Ads SDK
+    /// This should be called after ATT authorization is handled
     func initializeSDK() {
         guard !isInitialized else { return }
         
@@ -53,16 +82,31 @@ final class AdManager {
                 try await MobileAds.shared.start()
                 await MainActor.run {
                     self.isInitialized = true
+                    #if DEBUG
                     print("[AdManager] Google Mobile Ads SDK initialized")
+                    #endif
                 }
             } catch {
+                #if DEBUG
                 print("[AdManager] Failed to initialize SDK: \(error)")
+                #endif
             }
         }
         #else
+        #if DEBUG
         print("[AdManager] GoogleMobileAds SDK not available")
+        #endif
         isInitialized = true
         #endif
+    }
+    
+    /// Request ATT authorization and then initialize the SDK
+    func requestTrackingAndInitialize() async {
+        // Request tracking authorization first
+        _ = await requestTrackingAuthorization()
+        
+        // Then initialize the SDK (works regardless of ATT status)
+        initializeSDK()
     }
     
     /// Record that the user purchased ad removal
@@ -70,7 +114,9 @@ final class AdManager {
         hasRemovedAds = true
         isAdsEnabled = false
         UserDefaults.standard.set(true, forKey: adRemovalKey)
+        #if DEBUG
         print("[AdManager] Ad removal purchased - ads disabled")
+        #endif
     }
     
     /// Restore ad removal purchase (for app reinstall)

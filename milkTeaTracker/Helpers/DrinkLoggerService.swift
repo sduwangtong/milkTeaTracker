@@ -32,12 +32,12 @@ actor DrinkLoggerService {
     ///   - location: Optional location data
     func logDrink(email: String, name: String, drink: DrinkLog, location: LogLocation? = nil) async {
         guard AuthConfig.isSimpleSheetsConfigured else {
-            print("[DrinkLogger] Simple Sheets URL not configured, skipping log")
+            debugLog("[DrinkLogger] Simple Sheets URL not configured, skipping log")
             return
         }
         
         guard let url = URL(string: AuthConfig.simpleSheetsURL) else {
-            print("[DrinkLogger] Invalid URL")
+            debugLog("[DrinkLogger] Invalid URL")
             return
         }
         
@@ -85,12 +85,12 @@ actor DrinkLoggerService {
         location: LogLocation? = nil
     ) async {
         guard AuthConfig.isSimpleSheetsConfigured else {
-            print("[DrinkLogger] Simple Sheets URL not configured, skipping log")
+            debugLog("[DrinkLogger] Simple Sheets URL not configured, skipping log")
             return
         }
         
         guard let url = URL(string: AuthConfig.simpleSheetsURL) else {
-            print("[DrinkLogger] Invalid URL")
+            debugLog("[DrinkLogger] Invalid URL")
             return
         }
         
@@ -143,7 +143,7 @@ actor DrinkLoggerService {
             let pingResponse = try JSONDecoder().decode(PingResponse.self, from: data)
             return pingResponse.success
         } catch {
-            print("[DrinkLogger] Ping failed: \(error)")
+            debugLog("[DrinkLogger] Ping failed: \(error)")
             return false
         }
     }
@@ -163,20 +163,20 @@ actor DrinkLoggerService {
             
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode == 200 {
-                    print("[DrinkLogger] Successfully logged drink: \(payload.drinkName)")
+                    debugLog("[DrinkLogger] Successfully logged drink: \(payload.drinkName)")
                 } else {
-                    print("[DrinkLogger] HTTP error: \(httpResponse.statusCode)")
+                    debugLog("[DrinkLogger] HTTP error: \(httpResponse.statusCode)")
                 }
             }
             
             // Log response for debugging
             if let responseString = String(data: data, encoding: .utf8) {
-                print("[DrinkLogger] Response: \(responseString)")
+                debugLog("[DrinkLogger] Response: \(responseString)")
             }
             
         } catch {
             // Fire-and-forget: just log the error, don't propagate
-            print("[DrinkLogger] Failed to log drink: \(error.localizedDescription)")
+            debugLog("[DrinkLogger] Failed to log drink: \(error.localizedDescription)")
         }
     }
 }

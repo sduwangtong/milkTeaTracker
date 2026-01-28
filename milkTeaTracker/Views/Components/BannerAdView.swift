@@ -34,7 +34,7 @@ struct BannerAdView: View {
                             isAdLoaded: $isAdLoaded
                         )
                         .onAppear {
-                            print("[BannerAdView] Appearing with width: \(geometry.size.width), adUnitID: \(adUnitID)")
+                            debugLog("[BannerAdView] Appearing with width: \(geometry.size.width), adUnitID: \(adUnitID)")
                         }
                     }
                 }
@@ -85,7 +85,7 @@ struct BannerAdViewRepresentable: UIViewRepresentable {
     }
     
     func makeUIView(context: Context) -> UIView {
-        print("[BannerAd] makeUIView called with containerWidth: \(containerWidth)")
+        debugLog("[BannerAd] makeUIView called with containerWidth: \(containerWidth)")
         
         // Create a container view
         let containerView = UIView()
@@ -101,9 +101,9 @@ struct BannerAdViewRepresentable: UIViewRepresentable {
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let rootViewController = windowScene.windows.first?.rootViewController {
             bannerView.rootViewController = rootViewController
-            print("[BannerAd] rootViewController set successfully")
+            debugLog("[BannerAd] rootViewController set successfully")
         } else {
-            print("[BannerAd] Warning: No rootViewController available")
+            debugLog("[BannerAd] Warning: No rootViewController available")
         }
         
         containerView.addSubview(bannerView)
@@ -120,7 +120,7 @@ struct BannerAdViewRepresentable: UIViewRepresentable {
         // Load the ad immediately since we have the width
         let request = Request()
         bannerView.load(request)
-        print("[BannerAd] Ad request sent with adUnitID: \(adUnitID)")
+        debugLog("[BannerAd] Ad request sent with adUnitID: \(adUnitID)")
         
         return containerView
     }
@@ -138,7 +138,7 @@ struct BannerAdViewRepresentable: UIViewRepresentable {
         }
         
         func bannerViewDidReceiveAd(_ bannerView: BannerView) {
-            print("[BannerAd] Ad received successfully, size: \(bannerView.adSize.size)")
+            debugLog("[BannerAd] Ad received successfully, size: \(bannerView.adSize.size)")
             Task { @MainActor in
                 self.parent.adHeight = bannerView.adSize.size.height
                 self.parent.isAdLoaded = true
@@ -146,22 +146,22 @@ struct BannerAdViewRepresentable: UIViewRepresentable {
         }
         
         func bannerView(_ bannerView: BannerView, didFailToReceiveAdWithError error: Error) {
-            print("[BannerAd] Failed to receive ad: \(error.localizedDescription)")
+            debugLog("[BannerAd] Failed to receive ad: \(error.localizedDescription)")
             Task { @MainActor in
                 self.parent.isAdLoaded = false
             }
         }
         
         func bannerViewWillPresentScreen(_ bannerView: BannerView) {
-            print("[BannerAd] Will present screen")
+            debugLog("[BannerAd] Will present screen")
         }
         
         func bannerViewWillDismissScreen(_ bannerView: BannerView) {
-            print("[BannerAd] Will dismiss screen")
+            debugLog("[BannerAd] Will dismiss screen")
         }
         
         func bannerViewDidDismissScreen(_ bannerView: BannerView) {
-            print("[BannerAd] Did dismiss screen")
+            debugLog("[BannerAd] Did dismiss screen")
         }
     }
 }

@@ -19,6 +19,7 @@ struct milkTeaTrackerApp: App {
     @State private var languageManager = LanguageManager.shared
     @State private var authManager = AuthManager()
     @State private var freeUsageManager = FreeUsageManager.shared
+    @State private var legalConsentManager = LegalConsentManager.shared
     
     /// Whether to require authentication (set to true to show login screen first)
     private let requireAuthentication = true
@@ -31,12 +32,8 @@ struct milkTeaTrackerApp: App {
         }
         #endif
         
-        // Initialize Google Mobile Ads SDK
-        if FeatureFlags.showAds {
-            Task { @MainActor in
-                AdManager.shared.initializeSDK()
-            }
-        }
+        // Note: Ad SDK initialization is handled in onAppear to ensure ATT is requested
+        // after the UI is visible (iOS requirement)
     }
     
     var body: some Scene {
@@ -45,6 +42,7 @@ struct milkTeaTrackerApp: App {
                 authManager: authManager,
                 languageManager: languageManager,
                 freeUsageManager: freeUsageManager,
+                legalConsentManager: legalConsentManager,
                 requireAuthentication: requireAuthentication
             )
             .task {
@@ -80,7 +78,10 @@ struct ContentWrapperView: View {
     let authManager: AuthManager
     let languageManager: LanguageManager
     let freeUsageManager: FreeUsageManager
+    let legalConsentManager: LegalConsentManager
     let requireAuthentication: Bool
+    
+    @State private var hasRequestedTracking = false
     
     var body: some View {
         Group {
@@ -96,9 +97,36 @@ struct ContentWrapperView: View {
         .environment(authManager)
         .environment(languageManager)
         .environment(freeUsageManager)
+        .environment(legalConsentManager)
         .environment(\.locale, languageManager.locale)
         // Force view recreation when language changes to update all localized strings
         .id(languageManager.currentLanguage)
+        .onAppear {
+            // Request consent, ATT, and initialize ads after UI is visible (iOS requirement)
+            // Only do this once
+            guard !hasRequestedTracking && FeatureFlags.showAds else { return }
+            hasRequestedTracking = true
+            
+            Task { @MainActor in
+                // Small delay to ensure UI is fully visible
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                
+                // 1. Request GDPR consent info (for EU users)
+                await ConsentManager.shared.requestConsentInfoUpdate()
+                
+                // 2. Show consent form if required
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let rootViewController = windowScene.windows.first?.rootViewController {
+                    await ConsentManager.shared.loadAndPresentConsentFormIfRequired(from: rootViewController)
+                }
+                
+                // 3. Request ATT (for personalized ads)
+                // Note: Only request ATT after consent is handled
+                if ConsentManager.shared.canRequestAds() {
+                    await AdManager.shared.requestTrackingAndInitialize()
+                }
+            }
+        }
     }
 }
 

@@ -62,10 +62,10 @@ struct EditDrinkLogSheet: View {
                 
                 // Size Picker
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(languageManager.localizedString("size"))
+                    Text(languageManager.localizedString("size_label"))
                         .font(.system(size: 16, weight: .semibold))
                     
-                    Picker("Size", selection: $selectedSize) {
+                    Picker("", selection: $selectedSize) {
                         ForEach(DrinkSize.allCases, id: \.self) { size in
                             Text(size.localizedName(using: languageManager)).tag(size)
                         }
@@ -75,10 +75,10 @@ struct EditDrinkLogSheet: View {
                 
                 // Sugar Level Picker
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(languageManager.localizedString("sugar_level"))
+                    Text(languageManager.localizedString("sugar_label"))
                         .font(.system(size: 16, weight: .semibold))
                     
-                    Picker("Sugar", selection: $selectedSugarLevel) {
+                    Picker("", selection: $selectedSugarLevel) {
                         ForEach(SugarLevel.allCases, id: \.self) { sugar in
                             Text(sugar.localizedName(using: languageManager)).tag(sugar)
                         }
@@ -88,10 +88,10 @@ struct EditDrinkLogSheet: View {
                 
                 // Ice Level Picker
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(languageManager.localizedString("ice_level"))
+                    Text(languageManager.localizedString("ice_label"))
                         .font(.system(size: 16, weight: .semibold))
                     
-                    Picker("Ice", selection: $selectedIce) {
+                    Picker("", selection: $selectedIce) {
                         ForEach(IceLevel.allCases, id: \.self) { ice in
                             Text(ice.localizedName(using: languageManager)).tag(ice)
                         }
@@ -101,7 +101,7 @@ struct EditDrinkLogSheet: View {
                 
                 // Calories Input
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(String(localized: "calories"))
+                    Text(String(localized: "calories_label"))
                         .font(.system(size: 16, weight: .semibold))
                     
                     HStack {
@@ -117,7 +117,7 @@ struct EditDrinkLogSheet: View {
                 
                 // Sugar Input
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(String(localized: "sugar"))
+                    Text(String(localized: "sugar_grams_label"))
                         .font(.system(size: 16, weight: .semibold))
                     
                     HStack {
@@ -126,14 +126,14 @@ struct EditDrinkLogSheet: View {
                             .textFieldStyle(.roundedBorder)
                             .focused($focusedField, equals: .sugar)
                         
-                        Text("g")
+                        Text(String(localized: "grams_unit"))
                             .foregroundStyle(.secondary)
                     }
                 }
                 
                 // Price Input
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(String(localized: "price"))
+                    Text(String(localized: "price_label"))
                         .font(.system(size: 16, weight: .semibold))
                     
                     HStack {
@@ -176,6 +176,14 @@ struct EditDrinkLogSheet: View {
         }
         .navigationTitle(String(localized: "edit_drink"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(String(localized: "done_button")) {
+                    focusedField = nil
+                }
+            }
+        }
         .onAppear {
             // Initialize state when view appears
             selectedSize = drinkLog.size

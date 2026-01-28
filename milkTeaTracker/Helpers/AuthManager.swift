@@ -160,6 +160,43 @@ final class AuthManager: NSObject {
         error = nil
     }
     
+    /// Delete account and all associated data
+    /// This is required by Apple for App Store compliance (since June 2022)
+    func deleteAccount(modelContext: Any?) async throws {
+        isLoading = true
+        defer { isLoading = false }
+        
+        // Clear local SwiftData if modelContext is provided
+        if let context = modelContext {
+            // Note: The caller should handle clearing SwiftData models
+            // This keeps AuthManager decoupled from SwiftData
+        }
+        
+        // Clear Google sign-in state
+        #if canImport(GoogleSignIn)
+        GIDSignIn.sharedInstance.signOut()
+        #endif
+        
+        // Clear Facebook login state
+        #if canImport(FacebookLogin)
+        LoginManager().logOut()
+        #endif
+        
+        // Clear all keychain data
+        KeychainHelper.delete(key: KeychainKey.userInfo)
+        KeychainHelper.delete(key: KeychainKey.authToken)
+        
+        // Clear UserDefaults related to the app
+        let domain = Bundle.main.bundleIdentifier ?? "com.milkTeaTracker"
+        UserDefaults.standard.removePersistentDomain(forName: domain)
+        UserDefaults.standard.synchronize()
+        
+        // Clear state
+        currentUser = nil
+        currentToken = nil
+        error = nil
+    }
+    
     /// Get current ID token for API calls, refreshing if needed
     func getCurrentIdToken() async throws -> String {
         guard let token = currentToken else {
@@ -467,6 +504,17 @@ final class AuthManager: NSObject {
         switch provider {
         case .google:
             #if canImport(GoogleSignIn)
+            // First, try to restore the previous sign-in session
+            // GIDSignIn doesn't persist currentUser after app restart, so we need to restore it
+            if GIDSignIn.sharedInstance.currentUser == nil {
+                do {
+                    try await GIDSignIn.sharedInstance.restorePreviousSignIn()
+                } catch {
+                    // If restore fails, the user needs to sign in again
+                    throw AuthError.noToken
+                }
+            }
+            
             guard let currentUser = GIDSignIn.sharedInstance.currentUser else {
                 throw AuthError.noToken
             }

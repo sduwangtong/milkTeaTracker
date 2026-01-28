@@ -138,11 +138,16 @@ struct DrinkTemplateRow: View {
 
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Brand.self, DrinkTemplate.self, DrinkLog.self, configurations: config)
-    let brand = Brand(name: "HeyTea", nameZH: "喜茶", emoji: "🍵", isPopular: true)
-    container.mainContext.insert(brand)
-    
-    return DrinkSelectionView(brand: brand, toastManager: ToastManager())
-        .modelContainer(container)
-        .environment(LanguageManager.shared)
+    do {
+        let container = try ModelContainer(for: Brand.self, DrinkTemplate.self, DrinkLog.self, configurations: config)
+        let brand = Brand(name: "HeyTea", nameZH: "喜茶", emoji: "🍵", isPopular: true)
+        container.mainContext.insert(brand)
+        
+        return DrinkSelectionView(brand: brand, toastManager: ToastManager())
+            .modelContainer(container)
+            .environment(LanguageManager.shared)
+    } catch {
+        return Text("Preview Error: \(error.localizedDescription)")
+            .environment(LanguageManager.shared)
+    }
 }

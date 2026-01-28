@@ -10,6 +10,15 @@ import Foundation
 
 /// Configuration for authentication and backend services
 enum AuthConfig {
+    // MARK: - Legal URLs
+    /// Privacy Policy URL - REQUIRED for App Store submission
+    /// Replace with your actual privacy policy URL before submitting to App Store
+    static let privacyPolicyURL = "https://bobadiary.app/privacy"
+    
+    /// Terms of Service URL - REQUIRED for App Store submission
+    /// Replace with your actual terms of service URL before submitting to App Store
+    static let termsOfServiceURL = "https://bobadiary.app/terms"
+    
     // MARK: - Google Sign-In
     /// Your Google OAuth 2.0 Client ID from Google Cloud Console
     /// Format: "xxxx.apps.googleusercontent.com"
@@ -27,12 +36,17 @@ enum AuthConfig {
     // MARK: - Simple Drink Logger (Google Sheets)
     /// The deployed Google Apps Script Web App URL for simple drink logging
     /// This endpoint just appends drink data to a sheet with API key verification
-    /// Get this after deploying SimpleDrinkLogger.js from the Backend folder
-    static let simpleSheetsURL = "https://script.google.com/macros/s/AKfycbyKMEE3_gvCQT92Q_ZWkSSahdwIjWVoebadpKuUEARXMrTQotzq4UruaguTZIQeMTZRwg/exec"
+    /// Set via SIMPLE_SHEETS_URL in your xcconfig file
+    static var simpleSheetsURL: String {
+        SecureConfig.simpleSheetsURL
+    }
     
     /// API key for authenticating with the Simple Drink Logger
     /// Must match the API_KEY in SimpleDrinkLogger.js
-    static let sheetsAPIKey = "P,sp9[2TLxa82*G)"
+    /// Set via SHEETS_API_KEY in your xcconfig file
+    static var sheetsAPIKey: String {
+        SecureConfig.sheetsAPIKey
+    }
     
     // MARK: - AdMob Configuration
     /// Your AdMob App ID
@@ -60,7 +74,7 @@ enum AuthConfig {
     
     /// Check if simple sheets logging is configured
     static var isSimpleSheetsConfigured: Bool {
-        return !simpleSheetsURL.contains("YOUR_") && !sheetsAPIKey.contains("YOUR_")
+        return SecureConfig.isSheetsConfigured
     }
     
     /// Check if AdMob is configured
