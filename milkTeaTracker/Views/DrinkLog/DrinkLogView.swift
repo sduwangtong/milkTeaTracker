@@ -91,6 +91,8 @@ struct DrinkLogView: View {
                             .background(Color(red: 0.93, green: 0.26, blue: 0.55))
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
+                        .accessibilityLabel(languageManager.localizedString("custom_drink_button"))
+                        .accessibilityHint(languageManager.localizedString("custom_drink_hint"))
                         
                         // Snap Button - direct camera access (disabled when no free scans left)
                         Button(action: {
@@ -109,11 +111,13 @@ struct DrinkLogView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                         .disabled(!freeUsageManager.canScan || isProcessingSnap)
+                        .accessibilityLabel(languageManager.localizedString("snap_button"))
+                        .accessibilityHint(freeUsageManager.canScan ? languageManager.localizedString("snap_hint") : languageManager.localizedString("snap_disabled_hint"))
                     }
                     .padding(.horizontal)
                     
                     // Banner Ad (between Quick Log and content)
-                    if FeatureFlags.showAds && AdManager.shared.shouldShowAds() {
+                    if FeatureFlags.showBannerAdsInMainViews && AdManager.shared.shouldShowAds() {
                         BannerAdView()
                             .padding(.horizontal)
                     }

@@ -182,7 +182,7 @@ struct LedgerView: View {
                     .padding(.vertical, 8)
                     
                     // Banner Ad
-                    if FeatureFlags.showAds && AdManager.shared.shouldShowAds() {
+                    if FeatureFlags.showBannerAdsInMainViews && AdManager.shared.shouldShowAds() {
                         BannerAdView()
                             .padding(.horizontal)
                     }
